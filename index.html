@@ -3,313 +3,331 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>كاشير الريس - نظام POS متطور</title>
-    <!-- Tailwind CSS للتصميم العصري والسريع -->
+    <title>كاشير مطعم صاج رايز POS</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap');
         body { font-family: 'Cairo', sans-serif; }
-        
-        /* إعدادات الطباعة الحرارية (80mm Thermal Receipt) */
         @media print {
             body * { visibility: hidden; }
             #receipt-print-area, #receipt-print-area * { visibility: visible; }
             #receipt-print-area {
-                position: absolute;
-                left: 0;
-                top: 0;
-                width: 80mm;
-                padding: 5mm;
-                font-size: 12px;
-                color: black;
+                position: absolute; left: 0; top: 0; width: 80mm; padding: 5mm; font-size: 12px; color: black;
             }
             .no-print { display: none !important; }
+        }
+        .category-btn.active {
+            background-color: #f97316;
+            color: white;
+            border-color: #f97316;
         }
     </style>
 </head>
 <body class="bg-slate-100 text-slate-800 h-screen flex overflow-hidden">
 
-    <!-- القائمة الجانبية للتنقل -->
+    <!-- الشريط الجانبي -->
     <aside class="w-20 bg-slate-900 text-white flex flex-col items-center py-6 justify-between no-print">
         <div class="flex flex-col items-center gap-8">
-            <div class="w-12 h-12 bg-indigo-600 rounded-xl flex items-center justify-center font-bold text-xl shadow-lg shadow-indigo-500/30">
-                الريس
+            <div class="w-12 h-12 bg-orange-500 rounded-xl flex items-center justify-center font-bold text-lg shadow-lg shadow-orange-500/30 text-center leading-tight">
+                صاج<br>رايز
             </div>
             <nav class="flex flex-col gap-6">
-                <button title="الكاشير" class="p-3 bg-indigo-600/20 text-indigo-400 rounded-xl hover:bg-indigo-600 hover:text-white transition"><i class="fa-solid fa-cash-register text-xl"></i></button>
-                <button title="التقارير" class="p-3 hover:bg-slate-800 rounded-xl text-slate-400 hover:text-white transition"><i class="fa-solid fa-chart-line text-xl"></i></button>
-                <button title="إعدادات الطابعة" class="p-3 hover:bg-slate-800 rounded-xl text-slate-400 hover:text-white transition" onclick="openPrinterSettings()"><i class="fa-solid fa-print text-xl"></i></button>
+                <button title="الكاشير" class="p-3 bg-orange-500/20 text-orange-400 rounded-xl hover:bg-orange-500 hover:text-white transition"><i class="fa-solid fa-cash-register text-xl"></i></button>
+                <button title="طباعة" class="p-3 hover:bg-slate-800 rounded-xl text-slate-400 hover:text-white transition" onclick="alert('قم بضبط الطابعة كطابعة افتراضية للطباعة المباشرة.')"><i class="fa-solid fa-print text-xl"></i></button>
             </nav>
         </div>
-        <button title="خروج" class="p-3 hover:bg-red-500/20 text-red-400 rounded-xl transition"><i class="fa-solid fa-power-off text-xl"></i></button>
     </aside>
 
-    <!-- منطقة المبيعات الرئيسية -->
+    <!-- المنطقة الرئيسية -->
     <main class="flex-1 flex overflow-hidden">
-        
-        <!-- قسم المنتجات والفئات -->
+        <!-- قسم الأطعمة والمنتجات -->
         <section class="flex-1 flex flex-col p-6 overflow-y-auto">
-            <!-- الهيدر والبحث -->
-            <header class="flex justify-between items-center mb-6">
+            <header class="flex justify-between items-center mb-4">
                 <div>
-                    <h1 class="text-2xl font-extrabold text-slate-900">كاشير الريس POS</h1>
-                    <p class="text-sm text-slate-500">نظام المبيعات السريع والأول بالدينار الأردني</p>
-                </div>
-                <div class="relative w-72">
-                    <i class="fa-solid fa-search absolute right-3 top-3.5 text-slate-400"></i>
-                    <input type="text" id="search-input" placeholder="بحث عن منتج..." class="w-full pr-10 pl-4 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-white text-sm shadow-sm">
+                    <h1 class="text-2xl font-extrabold text-slate-900">مطعم صاج رايز</h1>
+                    <p class="text-sm text-slate-500">معان - مجمع عامر القرامسة | هاتف: 0782542024</p>
                 </div>
             </header>
 
-            <!-- تصنيفات المنتجات -->
-            <div class="flex gap-3 mb-6 overflow-x-auto pb-2">
-                <button class="px-5 py-2.5 rounded-xl bg-indigo-600 text-white font-semibold text-sm shadow-md shadow-indigo-200">الكل</button>
-                <button class="px-5 py-2.5 rounded-xl bg-white text-slate-600 hover:bg-slate-50 font-semibold text-sm border border-slate-200">مشروبات hot</button>
-                <button class="px-5 py-2.5 rounded-xl bg-white text-slate-600 hover:bg-slate-50 font-semibold text-sm border border-slate-200">مشروبات باردة</button>
-                <button class="px-5 py-2.5 rounded-xl bg-white text-slate-600 hover:bg-slate-50 font-semibold text-sm border border-slate-200">وجبات خفيفة</button>
-            </div>
+            <!-- فلترة الأقسام -->
+            <div class="flex gap-2 overflow-x-auto pb-4 mb-2 no-print" id="categories-bar"></div>
 
-            <!-- شبكة عرض المنتجات -->
-            <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4" id="products-grid">
-                <!-- المنتجات يتم توليدها بواسطة JavaScript -->
-            </div>
+            <!-- شبكة الأصناف -->
+            <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3" id="products-grid"></div>
         </section>
 
-        <!-- قسم سلة الشراء / الفاتورة الحالية -->
+        <!-- قسم الفاتورة -->
         <section class="w-96 bg-white border-r border-slate-200 flex flex-col shadow-xl">
-            <!-- هيدر الطلب -->
-            <div class="p-5 border-b border-slate-100 flex justify-between items-center bg-slate-50">
-                <div>
-                    <h2 class="font-bold text-lg text-slate-800">الفاتورة الحالية</h2>
-                    <span class="text-xs text-slate-500" id="order-id">رقم الفاتورة: #1002</span>
-                </div>
-                <button onclick="clearCart()" class="text-xs text-red-500 font-semibold hover:bg-red-50 px-2.5 py-1.5 rounded-lg border border-red-200 transition">تفريغ السلة</button>
+            <div class="p-4 border-b border-slate-100 flex justify-between items-center bg-slate-50">
+                <h2 class="font-bold text-lg text-slate-800">الفاتورة الحالية</h2>
+                <button onclick="clearCart()" class="text-xs text-red-500 font-semibold px-2 py-1 border border-red-200 rounded hover:bg-red-50">تفريغ</button>
             </div>
+            
+            <div class="flex-1 overflow-y-auto p-4 space-y-2" id="cart-items"></div>
 
-            <!-- قائمة المواد المضافة -->
-            <div class="flex-1 overflow-y-auto p-4 space-y-3" id="cart-items">
-                <!-- عناصر السلة -->
-            </div>
-
-            <!-- الحسابات الإجمالية والتأكيد -->
-            <div class="p-5 border-t border-slate-100 bg-slate-50 space-y-3">
-                <div class="flex justify-between text-sm text-slate-600">
-                    <span>المجموع الفرعي:</span>
-                    <span id="subtotal">0.000 د.أ</span>
+            <div class="p-4 border-t border-slate-100 bg-slate-50 space-y-3">
+                <div class="flex justify-between text-xl font-bold border-t pt-2">
+                    <span>الإجمالي:</span>
+                    <span id="total" class="text-orange-600">0.000 د.أ</span>
                 </div>
-                <div class="flex justify-between text-sm text-slate-600">
-                    <span>ضريبة المبيعات (16%):</span>
-                    <span id="tax">0.000 د.أ</span>
-                </div>
-                <div class="flex justify-between text-lg font-extrabold text-indigo-900 border-t border-slate-200 pt-3">
-                    <span>الإجمالي الكلي:</span>
-                    <span id="total" class="text-indigo-600">0.000 د.أ</span>
-                </div>
-
-                <div class="grid grid-cols-2 gap-2 pt-2">
-                    <button onclick="processPayment('نقداً')" class="py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl shadow-lg shadow-emerald-600/20 transition flex items-center justify-center gap-2">
-                        <i class="fa-solid fa-money-bill-wave"></i> دفع كاش
-                    </button>
-                    <button onclick="processPayment('بطاقة')" class="py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl shadow-lg shadow-indigo-600/20 transition flex items-center justify-center gap-2">
-                        <i class="fa-solid fa-credit-card"></i> بطاقة
-                    </button>
-                </div>
+                <button onclick="processPayment()" class="w-full py-3 bg-orange-500 hover:bg-orange-600 text-white font-bold rounded-xl shadow-lg shadow-orange-500/30 text-lg transition">دفع وطباعة الفاتورة</button>
             </div>
         </section>
     </main>
 
-    <!-- الهيكل الخاص بطباعة الفاتورة (يظهر فقط في الطباعة) -->
+    <!-- فاتورة الطباعة (80mm) -->
     <div id="receipt-print-area" class="hidden">
-        <div style="text-align: center; border-bottom: 1px dashed #000; padding-bottom: 8px; margin-bottom: 8px;">
-            <h2 style="font-size: 16px; font-weight: bold; margin: 0;">كاشير الريس</h2>
-            <p style="margin: 2px 0;">المملكة الأردنية الهاشمية</p>
-            <p style="margin: 2px 0;" id="print-date"></p>
-            <p style="margin: 2px 0;" id="print-order-id"></p>
+        <div style="text-align: center; border-bottom: 1px dashed #000; padding-bottom: 5px;">
+            <h2 style="margin:0; font-size: 16px;">مطعم صاج رايز</h2>
+            <p style="margin:2px 0; font-size:10px;">معان - مجمع عامر القرامسة</p>
+            <p style="margin:2px 0; font-size:10px;">هاتف: 0782542024</p>
+            <p id="print-date" style="margin:2px 0; font-size:10px;"></p>
         </div>
-        <table style="width: 100%; text-align: right; border-collapse: collapse; margin-bottom: 8px;">
+        <table style="width: 100%; margin-top: 10px; text-align: right; border-collapse: collapse;">
             <thead>
                 <tr style="border-bottom: 1px solid #000;">
-                    <th>الصنف</th>
+                    <th style="text-align: right;">الصنف</th>
                     <th style="text-align: center;">العدد</th>
                     <th style="text-align: left;">السعر</th>
                 </tr>
             </thead>
-            <tbody id="print-items">
-                <!-- عناصر الفاتورة للطباعة -->
-            </tbody>
+            <tbody id="print-items"></tbody>
         </table>
-        <div style="border-top: 1px dashed #000; padding-top: 8px; font-size: 11px;">
-            <div style="display: flex; justify-content: space-between;">
-                <span>المجموع:</span>
-                <span id="print-subtotal"></span>
-            </div>
-            <div style="display: flex; justify-content: space-between;">
-                <span>الضريبة (16%):</span>
-                <span id="print-tax"></span>
-            </div>
-            <div style="display: flex; justify-content: space-between; font-weight: bold; font-size: 13px; margin-top: 4px;">
-                <span>الإجمالي:</span>
-                <span id="print-total"></span>
-            </div>
+        <div style="border-top: 1px dashed #000; margin-top: 10px; padding-top: 5px; text-align: left; font-weight: bold;">
+            <p style="margin:0; font-size: 14px;">الإجمالي: <span id="print-total"></span> د.أ</p>
         </div>
-        <div style="text-align: center; margin-top: 15px; border-top: 1px solid #000; padding-top: 5px;">
-            <p style="margin: 0;">شكراً لزيارتكم!</p>
+        <div style="text-align: center; margin-top: 15px; font-size: 10px;">
+            <p>شكراً لزيارتكم!</p>
         </div>
     </div>
 
-    <!-- JavaScript التفاعلي -->
     <script>
-        // قائمة المنتجات الإفتراضية بالدينار الأردني (JOD)
         const products = [
-            { id: 1, name: "قهوة إسبريسو", price: 1.500, icon: "fa-mug-hot", color: "bg-amber-100 text-amber-700" },
-            { id: 2, name: "كابتشينو", price: 2.250, icon: "fa-coffee", color: "bg-orange-100 text-orange-700" },
-            { id: 3, name: "شاي بالنعناع", price: 0.750, icon: "fa-leaf", color: "bg-emerald-100 text-emerald-700" },
-            { id: 4, name: "عصير برتقال طازج", price: 2.000, icon: "fa-glass-citrus", color: "bg-yellow-100 text-yellow-700" },
-            { id: 5, name: "وافل بالشوكولاتة", price: 3.500, icon: "fa-stroopwafel", color: "bg-purple-100 text-purple-700" },
-            { id: 6, name: "ساندويتش حلوم", price: 2.750, icon: "fa-bread-slice", color: "bg-blue-100 text-blue-700" },
-            { id: 7, name: "ماء معبأ (صغير)", price: 0.350, icon: "fa-bottle-water", color: "bg-sky-100 text-sky-700" }
+            // شاورما عادي
+            { id: 1, name: "ساندويش عادي", price: 0.75, category: "شاورما" },
+            { id: 2, name: "ساندويش سوبر", price: 1.10, category: "شاورما" },
+            { id: 3, name: "ساندويش عادي طحينية وبصل", price: 0.75, category: "شاورما" },
+            { id: 4, name: "ساندويش سوبر طحينية وبصل", price: 1.10, category: "شاورما" },
+            { id: 5, name: "ساندويش فرنسي", price: 1.50, category: "شاورما" },
+            { id: 6, name: "خرطوشة", price: 0.75, category: "شاورما" },
+            { id: 7, name: "وجبة شاورما عادي", price: 1.75, category: "شاورما" },
+            { id: 8, name: "وجبة شاورما سوبر", price: 2.40, category: "شاورما" },
+            { id: 9, name: "وجبة شاورما دبل", price: 3.00, category: "شاورما" },
+            { id: 10, name: "وجبة شاورما تربل", price: 4.00, category: "شاورما" },
+            { id: 11, name: "وجبة شاورما عادي طحينية وبصل", price: 1.75, category: "شاورما" },
+            { id: 12, name: "وجبة شاورما سوبر طحينية وبصل", price: 2.40, category: "شاورما" },
+            { id: 13, name: "وجبة شاورما دبل طحينية وبصل", price: 3.00, category: "شاورما" },
+            { id: 14, name: "وجبة شاورما تربل طحينية وبصل", price: 4.00, category: "شاورما" },
+            { id: 15, name: "وجبة حلبي", price: 3.50, category: "شاورما" },
+            { id: 16, name: "وجبة ايطالي", price: 2.75, category: "شاورما" },
+            { id: 17, name: "وجبة ايطالي بالكريمة", price: 3.25, category: "شاورما" },
+            { id: 18, name: "وجبة فرنسي", price: 2.50, category: "شاورما" },
+            { id: 19, name: "نص اوقية شاورما حل", price: 1.75, category: "شاورما" },
+            { id: 20, name: "اوقية شاورما حل", price: 3.50, category: "شاورما" },
+            { id: 21, name: "نص كيلو شاورما حل", price: 6.00, category: "شاورما" },
+            { id: 22, name: "كيلو شاورما حل", price: 12.00, category: "شاورما" },
+            { id: 23, name: "سدر شاورما صغير", price: 5.50, category: "شاورما" },
+            { id: 24, name: "سدر شاورما عائلي", price: 8.00, category: "شاورما" },
+            { id: 25, name: "سدر شاورما العملاق", price: 15.00, category: "شاورما" },
+
+            // شاورما صاج
+            { id: 26, name: "ساندويش صاج عادي", price: 0.90, category: "شاورما صاج" },
+            { id: 27, name: "ساندويش صاج سوبر", price: 1.35, category: "شاورما صاج" },
+            { id: 28, name: "ساندويش صاج فرنسي", price: 1.75, category: "شاورما صاج" },
+            { id: 29, name: "وجبة شاورما صاج عادي", price: 2.25, category: "شاورما صاج" },
+            { id: 30, name: "وجبة شاورما صاج سوبر", price: 3.00, category: "شاورما صاج" },
+            { id: 31, name: "وجبة شاورما صاج دبل", price: 3.50, category: "شاورما صاج" },
+            { id: 32, name: "وجبة شاورما صاج تربل", price: 4.75, category: "شاورما صاج" },
+            { id: 33, name: "وجبة حلبي صاج", price: 3.50, category: "شاورما صاج" },
+            { id: 34, name: "وجبة ايطالي صاج", price: 3.00, category: "شاورما صاج" },
+            { id: 35, name: "وجبة ايطالي بالكريمة صاج", price: 3.50, category: "شاورما صاج" },
+            { id: 36, name: "وجبة فرنسي صاج", price: 2.75, category: "شاورما صاج" },
+            { id: 37, name: "سدر صاج عائلي صغير", price: 6.50, category: "شاورما صاج" },
+            { id: 38, name: "سدر صاج عائلي وسط", price: 9.00, category: "شاورما صاج" },
+            { id: 39, name: "سدر صاج عائلي كبير", price: 16.00, category: "شاورما صاج" },
+
+            // وجبات ورز
+            { id: 40, name: "تشكن فرايز", price: 2.50, category: "وجبات ورز" },
+            { id: 41, name: "وجبة صحية", price: 3.00, category: "وجبات ورز" },
+            { id: 42, name: "فولكانو فرايز", price: 3.00, category: "وجبات ورز" },
+            { id: 43, name: "كبسة - وجبة الطالب", price: 1.50, category: "وجبات ورز" },
+            { id: 44, name: "كبسة - نص دجاجة وجبة", price: 3.00, category: "وجبات ورز" },
+            { id: 45, name: "كبسة - نصف دجاجة سدر", price: 3.50, category: "وجبات ورز" },
+            { id: 46, name: "كبسة - دجاجة كاملة", price: 6.00, category: "وجبات ورز" },
+            { id: 47, name: "مندي - وجبة الطالب", price: 1.50, category: "وجبات ورز" },
+            { id: 48, name: "مندي - نص دجاجة وجبة", price: 3.00, category: "وجبات ورز" },
+            { id: 49, name: "مندي - نصف دجاجة سدر", price: 3.50, category: "وجبات ورز" },
+            { id: 50, name: "مندي - دجاجة كاملة", price: 6.00, category: "وجبات ورز" },
+            { id: 51, name: "بخاري - وجبة الطالب", price: 1.50, category: "وجبات ورز" },
+            { id: 52, name: "بخاري - نص دجاجة وجبة", price: 3.00, category: "وجبات ورز" },
+            { id: 53, name: "بخاري - نصف دجاجة سدر", price: 3.50, category: "وجبات ورز" },
+            { id: 54, name: "بخاري - دجاجة كاملة", price: 6.00, category: "وجبات ورز" },
+            { id: 55, name: "أوزي - وجبة الطالب", price: 1.50, category: "وجبات ورز" },
+            { id: 56, name: "أوزي - نص دجاجة وجبة", price: 3.00, category: "وجبات ورز" },
+            { id: 57, name: "أوزي - نصف دجاجة سدر", price: 3.50, category: "وجبات ورز" },
+            { id: 58, name: "أوزي - دجاجة كاملة", price: 6.00, category: "وجبات ورز" },
+            { id: 59, name: "منسف - وجبة الطالب", price: 2.00, category: "وجبات ورز" },
+            { id: 60, name: "منسف - نص دجاجة وجبة", price: 3.75, category: "وجبات ورز" },
+            { id: 61, name: "منسف - نصف دجاجة سدر", price: 4.25, category: "وجبات ورز" },
+            { id: 62, name: "منسف - دجاجة كاملة", price: 7.50, category: "وجبات ورز" },
+
+            // برجر
+            { id: 63, name: "ساندويش صدر مشوي دجاج", price: 1.75, category: "برجر" },
+            { id: 64, name: "ساندويش رويال رايز برجر مقلي دجاج", price: 1.75, category: "برجر" },
+            { id: 65, name: "ساندويش الفريدو صدر مشوي دجاج", price: 1.75, category: "برجر" },
+            { id: 66, name: "ساندويش ماشروم كريمه برجر لحم", price: 2.75, category: "برجر" },
+            { id: 67, name: "ساندويش SG اس جي", price: 2.50, category: "برجر" },
+            { id: 68, name: "ساندويش سبيشال رايز برجر", price: 2.50, category: "برجر" },
+            { id: 69, name: "وجبة إسكالوب اطفال", price: 1.00, category: "برجر" },
+            { id: 70, name: "وجبة إسكالوب", price: 2.50, category: "برجر" },
+            { id: 71, name: "وجبة صدر مشوي برجر دجاج", price: 2.75, category: "برجر" },
+            { id: 72, name: "وجبة رويال رايز برجر مقلي دجاج", price: 2.75, category: "برجر" },
+            { id: 73, name: "وجبة الفريدو صدر مشوي دجاج", price: 2.75, category: "برجر" },
+            { id: 74, name: "وجبة ماشروم كريمه برجر لحم", price: 3.75, category: "برجر" },
+            { id: 75, name: "وجبة SG اس جي", price: 3.50, category: "برجر" },
+            { id: 76, name: "وجبة سبيشال رايز برجر", price: 3.50, category: "برجر" },
+
+            // سناكات
+            { id: 77, name: "ساندويش زنجر", price: 1.50, category: "سناكات" },
+            { id: 78, name: "ساندويش زنجر بالكريمة", price: 1.75, category: "سناكات" },
+            { id: 79, name: "ساندويش ستربس زنجر", price: 1.75, category: "سناكات" },
+            { id: 80, name: "ساندويش فاهيتا", price: 1.50, category: "سناكات" },
+            { id: 81, name: "ساندويش مكسيكي", price: 1.50, category: "سناكات" },
+            { id: 82, name: "ساندويش شيش", price: 1.50, category: "سناكات" },
+            { id: 83, name: "ساندويش ستيك دجاج", price: 1.75, category: "سناكات" },
+            { id: 84, name: "ساندويش ستيك لحم", price: 2.00, category: "سناكات" },
+            { id: 85, name: "ساندويش زنقة", price: 2.00, category: "سناكات" },
+            { id: 86, name: "ساندويش هوتدوج", price: 1.50, category: "سناكات" },
+            { id: 87, name: "وجبة زنجر", price: 2.50, category: "سناكات" },
+            { id: 88, name: "وجبة زنجر بالكريمة", price: 2.75, category: "سناكات" },
+            { id: 89, name: "وجبة ستربس زنجر", price: 2.75, category: "سناكات" },
+            { id: 90, name: "وجبة فاهيتا", price: 2.50, category: "سناكات" },
+            { id: 91, name: "وجبة مكسيكي", price: 2.50, category: "سناكات" },
+            { id: 92, name: "وجبة شيش", price: 2.50, category: "سناكات" },
+            { id: 93, name: "وجبة ستيك دجاج", price: 2.75, category: "سناكات" },
+            { id: 94, name: "وجبة ستيك لحم", price: 3.00, category: "سناكات" },
+            { id: 95, name: "وجبة هوتدوج", price: 2.50, category: "سناكات" },
+            { id: 96, name: "وجبة زنقة (مع ببسي)", price: 3.00, category: "سناكات" },
+            { id: 97, name: "وجبة زنقة ايطالي (مع ببسي)", price: 3.50, category: "سناكات" },
+
+            // بروستد وكرسبي
+            { id: 98, name: "نصف دجاجة بروستد (4 قطع)", price: 3.25, category: "بروستد وكرسبي" },
+            { id: 99, name: "دجاجة بروستد (8 قطع)", price: 6.50, category: "بروستد وكرسبي" },
+            { id: 100, name: "وجبة عائلية بروستد (12 قطعة + 2 كرسبي + ببسي 1 لتر)", price: 10.50, category: "بروستد وكرسبي" },
+            { id: 101, name: "وجبة العملاق بروستد (16 قطعة + 3 كرسبي + ببسي 2 لتر)", price: 14.00, category: "بروستد وكرسبي" },
+            { id: 102, name: "كرسبي 4 قطع", price: 2.75, category: "بروستد وكرسبي" },
+            { id: 103, name: "كرسبي 8 قطع", price: 5.00, category: "بروستد وكرسبي" },
+            { id: 104, name: "كرسبي 12 قطعة", price: 7.25, category: "بروستد وكرسبي" },
+            { id: 105, name: "كرسبي 16 قطعة", price: 9.50, category: "بروستد وكرسبي" },
+
+            // إضافات
+            { id: 106, name: "علبة طحينية", price: 0.50, category: "إضافات" },
+            { id: 107, name: "علبة مثومة", price: 0.50, category: "إضافات" },
+            { id: 108, name: "علبة خلطة", price: 0.50, category: "إضافات" },
+            { id: 109, name: "علبة سلطة", price: 0.50, category: "إضافات" },
+            { id: 110, name: "علبة مايونيز", price: 0.50, category: "إضافات" },
+            { id: 111, name: "علبة مخلل", price: 0.50, category: "إضافات" },
+            { id: 112, name: "علبة كول سلو", price: 0.50, category: "إضافات" },
+            { id: 113, name: "علبة صوص رايز", price: 1.00, category: "إضافات" },
+            { id: 114, name: "لبن منسف علبة", price: 0.50, category: "إضافات" },
+            { id: 115, name: "وجبة طالب صدر", price: 1.75, category: "إضافات" },
+            { id: 116, name: "وجبة طالب منسف صدر", price: 2.25, category: "إضافات" }
         ];
 
         let cart = [];
-        let orderCounter = 1001;
+        let currentCategory = "الكل";
 
-        // عرض المنتجات
+        const categories = ["الكل", "شاورما", "شاورما صاج", "وجبات ورز", "برجر", "سناكات", "بروستد وكرسبي", "إضافات"];
+
+        function renderCategories() {
+            const bar = document.getElementById('categories-bar');
+            bar.innerHTML = categories.map(cat => `
+                <button onclick="selectCategory('${cat}')" class="category-btn ${cat === currentCategory ? 'active' : ''} px-4 py-2 rounded-xl text-sm font-bold border border-slate-200 bg-white hover:bg-slate-50 transition whitespace-nowrap">
+                    ${cat}
+                </button>
+            `).join('');
+        }
+
+        function selectCategory(cat) {
+            currentCategory = cat;
+            renderCategories();
+            renderProducts();
+        }
+
         function renderProducts() {
             const grid = document.getElementById('products-grid');
-            grid.innerHTML = '';
-            products.forEach(product => {
-                grid.innerHTML += `
-                    <div onclick="addToCart(${product.id})" class="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-sm hover:shadow-md hover:border-indigo-300 cursor-pointer transition flex flex-col justify-between">
-                        <div class="w-12 h-12 rounded-xl ${product.color} flex items-center justify-center mb-3">
-                            <i class="fa-solid ${product.icon} text-xl"></i>
-                        </div>
-                        <div>
-                            <h3 class="font-bold text-slate-800 text-sm mb-1">${product.name}</h3>
-                            <p class="text-indigo-600 font-extrabold text-sm">${product.price.toFixed(3)} د.أ</p>
+            const filtered = currentCategory === "الكل" ? products : products.filter(p => p.category === currentCategory);
+            
+            grid.innerHTML = filtered.map(p => `
+                <div onclick="addToCart(${p.id})" class="bg-white p-3 rounded-xl border border-slate-200 shadow-sm cursor-pointer hover:border-orange-500 hover:shadow-md transition flex flex-col justify-between">
+                    <h3 class="font-bold text-slate-800 text-sm leading-tight">${p.name}</h3>
+                    <p class="text-orange-600 font-extrabold text-base mt-2">${p.price.toFixed(2)} د.أ</p>
+                </div>
+            `).join('');
+        }
+
+        function addToCart(id) {
+            const p = products.find(prod => prod.id === id);
+            const item = cart.find(i => i.id === id);
+            if (item) item.qty++;
+            else cart.push({ ...p, qty: 1 });
+            updateCart();
+        }
+
+        function removeFromCart(id) {
+            const index = cart.findIndex(i => i.id === id);
+            if (index !== -1) {
+                if (cart[index].qty > 1) cart[index].qty--;
+                else cart.splice(index, 1);
+            }
+            updateCart();
+        }
+
+        function clearCart() { cart = []; updateCart(); }
+
+        function updateCart() {
+            const container = document.getElementById('cart-items');
+            container.innerHTML = cart.map(i => `
+                <div class="flex justify-between items-center bg-slate-50 p-2 rounded-lg border border-slate-100">
+                    <div class="flex-1">
+                        <div class="font-bold text-xs text-slate-800">${i.name}</div>
+                        <div class="text-xs text-slate-500">${i.price.toFixed(2)} د.أ × ${i.qty}</div>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <span class="font-bold text-sm text-orange-600">${(i.price * i.qty).toFixed(2)}</span>
+                        <div class="flex gap-1">
+                            <button onclick="removeFromCart(${i.id})" class="w-6 h-6 bg-slate-200 rounded text-xs font-bold hover:bg-slate-300">-</button>
+                            <button onclick="addToCart(${i.id})" class="w-6 h-6 bg-orange-500 text-white rounded text-xs font-bold hover:bg-orange-600">+</button>
                         </div>
                     </div>
-                `;
-            });
+                </div>
+            `).join('');
+
+            const total = cart.reduce((sum, i) => sum + (i.price * i.qty), 0);
+            document.getElementById('total').innerText = total.toFixed(2) + ' د.أ';
         }
 
-        // إضافة عنصر للسلة
-        function addToCart(productId) {
-            const product = products.find(p => p.id === productId);
-            const item = cart.find(i => i.id === productId);
-            if (item) {
-                item.qty++;
-            } else {
-                cart.push({ ...product, qty: 1 });
-            }
-            updateCartUI();
-        }
-
-        // تعديل الكمية
-        function changeQty(productId, delta) {
-            const item = cart.find(i => i.id === productId);
-            if (item) {
-                item.qty += delta;
-                if (item.qty <= 0) {
-                    cart = cart.filter(i => i.id !== productId);
-                }
-            }
-            updateCartUI();
-        }
-
-        // تفريغ السلة
-        function clearCart() {
-            cart = [];
-            updateCartUI();
-        }
-
-        // تحديث واجهة السلة والحسابات
-        function updateCartUI() {
-            const cartContainer = document.getElementById('cart-items');
-            cartContainer.innerHTML = '';
-
-            let subtotal = 0;
-
-            cart.forEach(item => {
-                const itemTotal = item.price * item.qty;
-                subtotal += itemTotal;
-                cartContainer.innerHTML += `
-                    <div class="flex justify-between items-center bg-slate-50 p-3 rounded-xl border border-slate-200/60">
-                        <div class="flex-1">
-                            <h4 class="font-bold text-xs text-slate-800">${item.name}</h4>
-                            <p class="text-xs text-slate-500">${item.price.toFixed(3)} د.أ</p>
-                        </div>
-                        <div class="flex items-center gap-2">
-                            <button onclick="changeQty(${item.id}, -1)" class="w-7 h-7 bg-white border border-slate-200 rounded-lg text-slate-600 font-bold hover:bg-slate-100 flex items-center justify-center">-</button>
-                            <span class="font-bold text-xs w-4 text-center">${item.qty}</span>
-                            <button onclick="changeQty(${item.id}, 1)" class="w-7 h-7 bg-white border border-slate-200 rounded-lg text-slate-600 font-bold hover:bg-slate-100 flex items-center justify-center">+</button>
-                        </div>
-                        <div class="w-16 text-left font-bold text-xs text-indigo-600 mr-2">
-                            ${itemTotal.toFixed(3)}
-                        </div>
-                    </div>
-                `;
-            });
-
-            const tax = subtotal * 0.16; // ضريبة المبيعات للأردن 16%
-            const total = subtotal + tax;
-
-            document.getElementById('subtotal').innerText = `${subtotal.toFixed(3)} د.أ`;
-            document.getElementById('tax').innerText = `${tax.toFixed(3)} د.أ`;
-            document.getElementById('total').innerText = `${total.toFixed(3)} د.أ`;
-        }
-
-        // تنفيذ عملية الدفع والطباعة المباشرة
-        function processPayment(type) {
-            if (cart.length === 0) {
-                alert('السلة فارغة!');
-                return;
-            }
-
-            // إعداد كائنات الطباعة
-            const printArea = document.getElementById('receipt-print-area');
-            const printItems = document.getElementById('print-items');
+        function processPayment() {
+            if (cart.length === 0) return alert('السلة فارغة!');
             
             document.getElementById('print-date').innerText = new Date().toLocaleString('ar-JO');
-            document.getElementById('print-order-id').innerText = `فاتورة رقم: #${orderCounter}`;
-            
-            printItems.innerHTML = '';
-            let subtotal = 0;
-            cart.forEach(item => {
-                const itemTotal = item.price * item.qty;
-                subtotal += itemTotal;
-                printItems.innerHTML += `
-                    <tr>
-                        <td>${item.name}</td>
-                        <td style="text-align: center;">${item.qty}</td>
-                        <td style="text-align: left;">${itemTotal.toFixed(3)}</td>
-                    </tr>
-                `;
-            });
+            document.getElementById('print-items').innerHTML = cart.map(i => `
+                <tr style="border-bottom: 1px solid #eee;">
+                    <td style="padding: 4px 0; font-size:11px;">${i.name}</td>
+                    <td style="text-align: center; font-size:11px;">${i.qty}</td>
+                    <td style="text-align: left; font-size:11px;">${(i.price * i.qty).toFixed(2)}</td>
+                </tr>
+            `).join('');
 
-            const tax = subtotal * 0.16;
-            const total = subtotal + tax;
+            const total = cart.reduce((sum, i) => sum + (i.price * i.qty), 0);
+            document.getElementById('print-total').innerText = total.toFixed(2);
 
-            document.getElementById('print-subtotal').innerText = `${subtotal.toFixed(3)} د.أ`;
-            document.getElementById('print-tax').innerText = `${tax.toFixed(3)} د.أ`;
-            document.getElementById('print-total').innerText = `${total.toFixed(3)} د.أ`;
-
-            // إظهار قسم الطباعة واستدعاء أمر الطابعة للمتصفح
-            printArea.classList.remove('hidden');
             window.print();
-            printArea.classList.add('hidden');
-
-            // زيادة رقم الفاتورة وتفريغ السلة
-            orderCounter++;
-            document.getElementById('order-id').innerText = `رقم الفاتورة: #${orderCounter}`;
             clearCart();
         }
 
-        function openPrinterSettings() {
-            alert('ربط طابعة الحرارية:\nيمكنك تحديد طابعة الفواتير (Thermal Printer 80mm) كطابعة افتراضية في نظام التشغيل (Windows/Mac) لطباعة الفواتير تلقائياً فور الضغط على زر الدفع.');
-        }
-
-        // إعداد البداية
+        renderCategories();
         renderProducts();
     </script>
 </body>
