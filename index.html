@@ -3,50 +3,120 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>كاشير الريس - POS System</title>
+    <title>كاشير - مطعم صاج رايز</title>
     <style>
+        :root {
+            --primary-orange: #ff7300;
+            --dark-orange: #e06500;
+            --bg-dark: #121212;
+            --card-bg: #1e1e1e;
+            --panel-bg: #252525;
+            --text-light: #f5f5f5;
+            --border-color: #333;
+        }
+
         * { box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
-        body { margin: 0; padding: 15px; background-color: #f0f2f5; }
+        body { margin: 0; padding: 15px; background-color: var(--bg-dark); color: var(--text-light); }
         
-        /* الهيدر وشاشة تسجيل الدخول */
-        header { background: #1e293b; color: white; padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; border-radius: 8px; margin-bottom: 15px; }
-        .user-info { display: flex; gap: 15px; align-items: center; }
+        header { 
+            background: linear-gradient(135deg, var(--card-bg), #000); 
+            color: white; 
+            padding: 15px 25px; 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+            border-radius: 12px; 
+            margin-bottom: 15px; 
+            border: 1px solid var(--primary-orange);
+            box-shadow: 0 4px 15px rgba(255, 115, 0, 0.2);
+        }
+
+        .header-title { display: flex; align-items: center; gap: 10px; }
+        .header-title h1 { margin: 0; font-size: 24px; color: var(--primary-orange); }
+        .header-title span { font-size: 14px; color: #bbb; }
+
+        .container { display: flex; gap: 15px; height: calc(100vh - 110px); }
+        .panel { background: var(--panel-bg); border-radius: 12px; padding: 15px; border: 1px solid var(--border-color); }
         
-        /* التنسيق الرئيسي */
-        .container { display: flex; gap: 15px; height: calc(100vh - 100px); }
-        .panel { background: white; border-radius: 8px; padding: 15px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); }
+        /* قسم الأصناف والتصنيفات */
+        .products-panel { flex: 1.4; display: flex; flex-direction: column; gap: 10px; }
         
-        /* قائمة الوجبات */
-        .products-panel { flex: 1.2; overflow-y: auto; }
-        .products-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 10px; margin-top: 10px; }
-        .product-card { background: #e2e8f0; border: none; padding: 15px 10px; border-radius: 6px; cursor: pointer; text-align: center; font-weight: bold; font-size: 15px; color: #0f172a; transition: 0.2s; }
-        .product-card:hover { background: #cbd5e1; transform: translateY(-2px); }
-        .product-card span { display: block; color: #2563eb; font-size: 13px; margin-top: 5px; }
-        
-        /* الفاتورة */
+        .categories-tabs { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 8px; border-bottom: 1px solid var(--border-color); }
+        .tab-btn { 
+            background: var(--card-bg); 
+            color: var(--text-light); 
+            border: 1px solid var(--border-color); 
+            padding: 8px 16px; 
+            border-radius: 20px; 
+            cursor: pointer; 
+            white-space: nowrap;
+            font-weight: bold;
+            transition: 0.2s;
+        }
+        .tab-btn.active, .tab-btn:hover { background: var(--primary-orange); color: #000; border-color: var(--primary-orange); }
+
+        .products-grid { 
+            display: grid; 
+            grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); 
+            gap: 10px; 
+            overflow-y: auto; 
+            padding: 5px; 
+        }
+
+        .product-card { 
+            background: var(--card-bg); 
+            border: 1px solid var(--border-color); 
+            padding: 12px 8px; 
+            border-radius: 8px; 
+            cursor: pointer; 
+            text-align: center; 
+            font-weight: bold; 
+            font-size: 14px; 
+            color: var(--text-light); 
+            transition: 0.2s; 
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            height: 85px;
+        }
+        .product-card:hover { border-color: var(--primary-orange); transform: translateY(-2px); }
+        .product-card span { color: var(--primary-orange); font-size: 15px; margin-top: 5px; }
+
+        /* قسم الفاتورة */
         .cart-panel { flex: 1; display: flex; flex-direction: column; justify-content: space-between; }
-        .cart-table { width: 100%; border-collapse: collapse; margin-bottom: 10px; }
-        .cart-table th, .cart-table td { border-bottom: 1px solid #e2e8f0; padding: 8px; text-align: right; }
-        .cart-items-wrapper { flex: 1; overflow-y: auto; }
+        .cart-items-wrapper { flex: 1; overflow-y: auto; margin-bottom: 10px; border-bottom: 1px solid var(--border-color); }
         
-        /* الحسابات والأسعار */
-        .summary-box { background: #f8fafc; border: 1px solid #e2e8f0; padding: 10px; border-radius: 6px; margin-top: 10px; }
-        .summary-line { display: flex; justify-content: space-between; margin-bottom: 5px; font-size: 15px; }
+        .cart-table { width: 100%; border-collapse: collapse; }
+        .cart-table th, .cart-table td { border-bottom: 1px solid var(--border-color); padding: 8px; text-align: right; }
+        .cart-table th { color: var(--primary-orange); font-size: 14px; }
+
+        .order-notes { margin: 8px 0; }
+        .order-notes input { 
+            width: 100%; 
+            padding: 8px 12px; 
+            background: var(--card-bg); 
+            border: 1px solid var(--border-color); 
+            color: white; 
+            border-radius: 6px; 
+            font-size: 13px;
+        }
+
+        .summary-box { background: var(--card-bg); border: 1px solid var(--border-color); padding: 12px; border-radius: 8px; }
+        .summary-line { display: flex; justify-content: space-between; margin-bottom: 5px; font-size: 14px; }
         .old-price { text-decoration: line-through; color: #ef4444; }
-        .final-price { font-size: 20px; font-weight: bold; color: #16a34a; }
-        
-        /* الأزرار */
+        .final-price { font-size: 20px; font-weight: bold; color: var(--primary-orange); border-top: 1px dashed var(--border-color); padding-top: 5px; margin-top: 5px; }
+
         .actions { display: flex; gap: 10px; margin-top: 10px; }
-        .btn { flex: 1; padding: 12px; border: none; border-radius: 6px; font-size: 16px; font-weight: bold; cursor: pointer; }
+        .btn { flex: 1; padding: 12px; border: none; border-radius: 6px; font-size: 15px; font-weight: bold; cursor: pointer; transition: 0.2s; }
         .btn-discount { background: #8b5cf6; color: white; }
-        .btn-print { background: #16a34a; color: white; }
-        .btn-danger { background: #ef4444; color: white; width: 30px; height: 30px; padding: 0; border-radius: 4px; }
-        
-        /* تنسيق الطباعة الحرارية */
+        .btn-print { background: var(--primary-orange); color: #000; }
+        .btn-print:hover { background: var(--dark-orange); }
+        .btn-danger { background: #ef4444; color: white; width: 26px; height: 26px; padding: 0; border-radius: 4px; border: none; cursor: pointer; }
+
         @media print {
             body * { visibility: hidden; }
             #receipt-print, #receipt-print * { visibility: visible; }
-            #receipt-print { position: absolute; left: 0; top: 0; width: 80mm; font-family: monospace; font-size: 12px; }
+            #receipt-print { position: absolute; left: 0; top: 0; width: 80mm; font-family: monospace; font-size: 12px; color: black; background: white; padding: 10px; }
             .no-print { display: none !important; }
         }
     </style>
@@ -54,23 +124,26 @@
 <body>
 
 <header class="no-print">
-    <h1>كاشير الريس</h1>
-    <div class="user-info">
-        <span>المستخدم: <strong id="current-user">كاشير</strong> (<span id="user-role">صلاحيات محدودة</span>)</span>
-        <button onclick="switchUser()" style="padding: 5px 10px; cursor: pointer;">تغيير المستخدم</button>
+    <div class="header-title">
+        <h1>مطعم صاج رايز</h1>
+        <span>سر الحكاية - نظام POS</span>
+    </div>
+    <div>
+        <span>المستخدم: <strong id="current-user" style="color:var(--primary-orange)">كاشير</strong> (<span id="user-role">صلاحيات محدودة</span>)</span>
+        <button onclick="switchUser()" style="margin-right: 10px; padding: 6px 12px; background: var(--card-bg); color: white; border: 1px solid var(--border-color); border-radius: 4px; cursor: pointer;">تغيير المستخدم</button>
     </div>
 </header>
 
 <div class="container no-print">
-    <!-- قائمة المنتجات -->
+    <!-- قائمة الأصناف -->
     <div class="panel products-panel">
-        <h3>قائمة الوجبات والساندويشات</h3>
+        <div class="categories-tabs" id="categories-tabs"></div>
         <div class="products-grid" id="products-list"></div>
     </div>
 
-    <!-- الفاتورة والتفاصيل -->
+    <!-- الفاتورة -->
     <div class="panel cart-panel">
-        <h3>الفاتورة الحالية</h3>
+        <h3 style="margin-top:0; color:var(--primary-orange)">تفاصيل الطلب</h3>
         <div class="cart-items-wrapper">
             <table class="cart-table">
                 <thead>
@@ -78,6 +151,10 @@
                 </thead>
                 <tbody id="cart-rows"></tbody>
             </table>
+        </div>
+
+        <div class="order-notes">
+            <input type="text" id="order-note-input" placeholder="ملاحظات الطلب (مثال: بدون ثوم / زيادة شطة)...">
         </div>
 
         <div class="summary-box">
@@ -89,48 +166,120 @@
                 <span>الخصم:</span>
                 <span id="discount-val">-0.00</span>
             </div>
-            <hr>
             <div class="summary-line final-price">
                 <span>الصافي النهائي:</span>
-                <span id="total-val">0.00</span>
+                <span id="total-val">0.00 د.أ</span>
             </div>
         </div>
 
         <div class="actions">
-            <button class="btn btn-discount" onclick="handleDiscount()">إضافة خصم</button>
-            <button class="btn btn-print" onclick="processOrder()">طباعة وقص الورقة</button>
+            <button class="btn btn-discount" onclick="handleDiscount()">خصم (Admin)</button>
+            <button class="btn btn-print" onclick="processOrder()">طباعة الفاتورة</button>
         </div>
     </div>
 </div>
 
-<!-- القالب المخصص للطباعة فقط -->
 <div id="receipt-print" style="display: none;"></div>
 
 <script>
-    // المنتجات الافتراضية
-    const products = [
-        { id: 1, name: "وجبة شاورما", price: 3.50 },
-        { id: 2, name: "ساندويش برغر", price: 2.50 },
-        { id: 3, name: "وجبة دجاج", price: 4.50 },
-        { id: 4, name: "بطاطا حجم كبير", price: 1.20 },
-        { id: 5, name: "عصير طازج", price: 1.00 }
-    ];
+    // أصناف المطعم المأخوذة من المنيو
+    const menuData = {
+        "وجبات صاج": [
+            { name: "وجبة صاج عادي", price: 2.25 },
+            { name: "وجبة صاج سوبر", price: 3.00 },
+            { name: "وجبة صاج دبل", price: 3.50 },
+            { name: "وجبة صاج تربل", price: 4.75 },
+            { name: "وجبة حلبي صاج", price: 3.50 },
+            { name: "وجبة ايطالي صاج", price: 3.00 },
+            { name: "وجبة ايطالي بالكريمة", price: 3.50 },
+            { name: "وجبة فرنسي صاج", price: 2.75 }
+        ],
+        "شاورما عادي": [
+            { name: "وجبة شاورما عادي", price: 1.75 },
+            { name: "وجبة شاورما سوبر", price: 2.40 },
+            { name: "وجبة شاورما دبل", price: 3.00 },
+            { name: "وجبة شاورما تربل", price: 4.00 },
+            { name: "وجبة طحينية وبصل عادي", price: 1.75 },
+            { name: "وجبة طحينية وبصل سوبر", price: 2.40 },
+            { name: "ساندويش عادي", price: 0.75 },
+            { name: "ساندويش سوبر", price: 1.10 },
+            { name: "خرطوشة", price: 0.75 }
+        ],
+        "سدر شاورما": [
+            { name: "سدر عائلي صغير", price: 5.50 },
+            { name: "سدر عائلي وسط", price: 8.00 },
+            { name: "سدر عائلي كبير", price: 15.00 },
+            { name: "نص اوقية حاف", price: 1.75 },
+            { name: "اوقية شاورما حاف", price: 3.50 },
+            { name: "كيلو شاورما حاف", price: 12.00 }
+        ],
+        "بروستد وكرسبي": [
+            { name: "نصف دجاجة بروستد", price: 3.25 },
+            { name: "دجاجة بروستد كاملة", price: 6.50 },
+            { name: "وجبة عائلية بروستد", price: 10.50 },
+            { name: "وجبة العملاق بروستد", price: 14.00 },
+            { name: "كرسبي 4 قطع", price: 2.75 },
+            { name: "كرسبي 8 قطع", price: 5.00 },
+            { name: "كرسبي 12 قطعة", price: 7.25 },
+            { name: "كرسبي 16 قطعة", price: 9.50 }
+        ],
+        "برجر و سناك": [
+            { name: "وجبة تشكن فرايز", price: 2.50 },
+            { name: "وجبة صحية", price: 3.00 },
+            { name: "فولكانو فرايز", price: 3.00 },
+            { name: "وجبة زنجر", price: 2.50 },
+            { name: "وجبة زنجر بالكريمة", price: 2.75 },
+            { name: "وجبة برجر دجاج", price: 2.75 },
+            { name: "وجبة برجر لحم", price: 3.75 },
+            { name: "ساندويش زنجر", price: 1.50 },
+            { name: "ساندويش برجر دجاج", price: 1.75 }
+        ],
+        "مقبلات ومشروبات": [
+            { name: "بطاطا صغير", price: 0.50 },
+            { name: "بطاطا كبير", price: 1.00 },
+            { name: "بطاطا ودجز كبير", price: 1.50 },
+            { name: "مشروب غازي 250مل", price: 0.25 },
+            { name: "لبن عيران", price: 0.50 },
+            { name: "علبة مثومة", price: 0.50 },
+            { name: "علبة صوص رايز", price: 1.00 }
+        ]
+    };
 
     let cart = [];
     let discountAmount = 0;
     let currentUser = { name: "كاشير", role: "Cashier" };
     const ADMIN_PIN = "1234";
 
-    // تحميل المنتجات
-    function renderProducts() {
+    // إعداد أزرار التصنيفات
+    function initCategories() {
+        const tabsContainer = document.getElementById('categories-tabs');
+        tabsContainer.innerHTML = '';
+        let first = true;
+        
+        for (let cat in menuData) {
+            const btn = document.createElement('button');
+            btn.className = `tab-btn ${first ? 'active' : ''}`;
+            btn.innerText = cat;
+            btn.onclick = () => {
+                document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                renderProducts(cat);
+            };
+            tabsContainer.appendChild(btn);
+            if (first) { renderProducts(cat); first = false; }
+        }
+    }
+
+    // عرض المنتجات بناءً على التصنيف
+    function renderProducts(category) {
         const container = document.getElementById('products-list');
         container.innerHTML = '';
-        products.forEach(p => {
+        menuData[category].forEach(p => {
             container.innerHTML += `
-                <button class="product-card" onclick="addToCart('${p.name}', ${p.price})">
-                    ${p.name}
+                <div class="product-card" onclick="addToCart('${p.name}', ${p.price})">
+                    <div>${p.name}</div>
                     <span>${p.price.toFixed(2)} د.أ</span>
-                </button>
+                </div>
             `;
         });
     }
@@ -175,27 +324,25 @@
             document.getElementById('discount-row').style.display = 'none';
         }
 
-        document.getElementById('total-val').innerText = total.toFixed(2);
+        document.getElementById('total-val').innerText = total.toFixed(2) + " د.أ";
     }
 
-    // إضافة الخصم بالصلاحيات
     function handleDiscount() {
         if (currentUser.role === "Cashier") {
             let pin = prompt("أدخل كلمة سر المشرف لعمل الخصم:");
             if (pin !== ADMIN_PIN) {
-                alert("كلمة السر خاطئة! الخصم متاح للمشرفين فقط.");
+                alert("كلمة السر خاطئة!");
                 return;
             }
         }
         
-        let val = parseFloat(prompt("أدخل قيمة الخصم:"));
+        let val = parseFloat(prompt("أدخل قيمة الخصم (بالدينار):"));
         if (!isNaN(val) && val >= 0) {
             discountAmount = val;
             updateCartUI();
         }
     }
 
-    // تغيير بين الكاشير والمدير
     function switchUser() {
         let pin = prompt("أدخل كلمة السر (1234 للمدير / 1111 للكاشير):");
         if (pin === "1234") {
@@ -210,7 +357,6 @@
         document.getElementById('user-role').innerText = currentUser.role === "Admin" ? "مدير بالنظام" : "صلاحيات محدودة";
     }
 
-    // إصدار أمر الطباعة
     function processOrder() {
         if (cart.length === 0) {
             alert("السلة فارغة!");
@@ -219,11 +365,14 @@
 
         let subtotal = cart.reduce((a, b) => a + b.price, 0);
         let total = Math.max(0, subtotal - discountAmount);
+        let note = document.getElementById('order-note-input').value.trim();
 
         let printHTML = `
             <div style="text-align: center; width: 100%;">
-                <h2 style="margin: 5px 0;">مطعم كاشير الريس</h2>
-                <p style="margin: 2px 0;">فاتورة مبيعات - ${new Date().toLocaleTimeString('ar-EG')}</p>
+                <h2 style="margin: 3px 0;">مطعم صاج رايز</h2>
+                <p style="margin: 2px 0;">معان - مجمع عامر القرامسة</p>
+                <p style="margin: 2px 0;">هاتف: 0782542024</p>
+                <p style="margin: 2px 0;">التاريخ: ${new Date().toLocaleString('ar-JO')}</p>
                 <p style="margin: 2px 0;">الكاشير: ${currentUser.name}</p>
                 <p>--------------------------------</p>
             </div>
@@ -234,36 +383,42 @@
             printHTML += `<tr><td>${item.name}</td><td style="text-align:left">${item.price.toFixed(2)}</td></tr>`;
         });
 
-        printHTML += `</table><p>--------------------------------</p><div style="font-size: 13px;">`;
+        printHTML += `</table><p>--------------------------------</p>`;
+
+        if (note !== "") {
+            printHTML += `<div style="font-size: 11px; margin-bottom: 8px;"><strong>ملاحظات:</strong> ${note}</div><p>--------------------------------</p>`;
+        }
+
+        printHTML += `<div style="font-size: 13px;">`;
 
         if (discountAmount > 0) {
             printHTML += `
-                <div>السعر الأصلي: <span style="text-decoration: line-through;">${subtotal.toFixed(2)}</span></div>
+                <div>المجموع الأصلي: <span style="text-decoration: line-through;">${subtotal.toFixed(2)}</span></div>
                 <div>الخصم: -${discountAmount.toFixed(2)}</div>
-                <div style="font-weight: bold; font-size: 15px;">السعر الجديد: ${total.toFixed(2)} د.أ</div>
+                <div style="font-weight: bold; font-size: 15px; margin-top: 4px;">الصافي: ${total.toFixed(2)} د.أ</div>
             `;
         } else {
             printHTML += `<div style="font-weight: bold; font-size: 15px;">المجموع الكلي: ${total.toFixed(2)} د.أ</div>`;
         }
 
-        printHTML += `</div><p style="text-align: center; margin-top: 15px;">شكراً لزيارتكم!</p>`;
+        printHTML += `</div><p style="text-align: center; margin-top: 15px;">شكراً لزيارتكم - صاج رايز</p>`;
 
         const receiptContainer = document.getElementById('receipt-print');
         receiptContainer.innerHTML = printHTML;
         receiptContainer.style.display = 'block';
 
-        // أمر الطباعة
         window.print();
 
-        // إعادة ضبط السلة بعد الطباعة
         receiptContainer.style.display = 'none';
         cart = [];
         discountAmount = 0;
+        document.getElementById('order-note-input').value = '';
         updateCartUI();
     }
 
-    renderProducts();
+    initCategories();
 </script>
 
 </body>
 </html>
+
