@@ -1,306 +1,269 @@
-import sqlite3
-import tkinter as tk
-from tkinter import messagebox, ttk
-import os
-import tempfile
-
-# ================= 1. قاعدة البيانات =================
-def init_db():
-    conn = sqlite3.connect("pos_system.db")
-    cursor = conn.cursor()
-    
-    # جدول المستخدمين
-    cursor.execute('''CREATE TABLE IF NOT EXISTS users (
-                        id INTEGER PRIMARY KEY AUTOINCREMENT,
-                        username TEXT UNIQUE,
-                        password TEXT,
-                        role TEXT)''')
-    
-    # جدول المنتجات
-    cursor.execute('''CREATE TABLE IF NOT EXISTS products (
-                        id INTEGER PRIMARY KEY AUTOINCREMENT,
-                        name TEXT,
-                        price REAL)''')
-    
-    # إضافة حسابات افتراضية إذا لم تكن موجودة
-    cursor.execute("SELECT * FROM users")
-    if not cursor.fetchall():
-        cursor.execute("INSERT INTO users (username, password, role) VALUES ('admin', '1234', 'Admin')")
-        cursor.execute("INSERT INTO users (username, password, role) VALUES ('cashier', '1111', 'Cashier')")
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>كاشير الريس - POS System</title>
+    <style>
+        * { box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        body { margin: 0; padding: 15px; background-color: #f0f2f5; }
         
-        # إضافة منتجات تجريبية
-        cursor.execute("INSERT INTO products (name, price) VALUES ('وجبة شاورما', 3.50)")
-        cursor.execute("INSERT INTO products (name, price) VALUES ('ساندويش برغر', 2.50)")
-        cursor.execute("INSERT INTO products (name, price) VALUES ('عصير طازج', 1.00)")
-        conn.commit()
-    conn.close()
-
-# ================= 2. شاشة تسجيل الدخول =================
-class LoginWindow:
-    def __init__(self, root, on_login_success):
-        self.root = root
-        self.root.title("تسجيل الدخول - نظام الكاشير")
-        self.root.geometry("350x250")
-        self.on_login_success = on_login_success
-
-        tk.Label(root, text="تسجيل الدخول", font=("Arial", 16, "bold")).pack(pady=15)
-
-        tk.Label(root, text="اسم المستخدم:").pack()
-        self.username_entry = tk.Entry(root)
-        self.username_entry.pack(pady=5)
-
-        tk.Label(root, text="كلمة السر:").pack()
-        self.password_entry = tk.Entry(root, show="*")
-        self.password_entry.pack(pady=5)
-
-        tk.Button(root, text="دخول", command=self.login, bg="#4CAF50", fg="white", width=12).pack(pady=15)
-
-    def login(self):
-        username = self.username_entry.get()
-        password = self.password_entry.get()
-
-        conn = sqlite3.connect("pos_system.db")
-        cursor = conn.cursor()
-        cursor.execute("SELECT role FROM users WHERE username=? AND password=?", (username, password))
-        user = cursor.fetchone()
-        conn.close()
-
-        if user:
-            role = user[0]
-            self.root.destroy()
-            self.on_login_success(username, role)
-        else:
-            messagebox.showerror("خطأ", "اسم المستخدم أو كلمة السر غير صحيحة")
-
-# ================= 3. شاشة POS الرئيسية =================
-class POSSystem:
-    def __init__(self, root, username, role):
-        self.root = root
-        self.root.title(f"نظام POS - المستخدم: {username} ({role})")
-        self.root.geometry("900x600")
+        /* الهيدر وشاشة تسجيل الدخول */
+        header { background: #1e293b; color: white; padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; border-radius: 8px; margin-bottom: 15px; }
+        .user-info { display: flex; gap: 15px; align-items: center; }
         
-        self.username = username
-        self.role = role
-        self.cart = []
-        self.discount = 0.0
-
-        # الهيكل العام
-        left_frame = tk.Frame(self.root, width=500, bg="#f0f0f0")
-        left_frame.pack(side=tk.LEFT, fill=tk.BOTH, expand=True, padx=10, pady=10)
-
-        right_frame = tk.Frame(self.root, width=400)
-        right_frame.pack(side=tk.RIGHT, fill=tk.BOTH, expand=True, padx=10, pady=10)
-
-        # ----- الجزء الأيمن: قائمة المنتجات -----
-        tk.Label(right_frame, text="قائمة الوجبات والساندويشات", font=("Arial", 14, "bold")).pack(pady=5)
+        /* التنسيق الرئيسي */
+        .container { display: flex; gap: 15px; height: calc(100vh - 100px); }
+        .panel { background: white; border-radius: 8px; padding: 15px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); }
         
-        self.product_listbox = tk.Listbox(right_frame, font=("Arial", 12))
-        self.product_listbox.pack(fill=tk.BOTH, expand=True, pady=5)
-        self.load_products()
-
-        btn_add = tk.Button(right_frame, text="إضافة للفاتورة", command=self.add_to_cart, bg="#2196F3", fg="white")
-        btn_add.pack(fill=tk.X, pady=5)
-
-        if self.role == "Admin":
-            btn_edit_price = tk.Button(right_frame, text="تعديل سعر المنتج (مدير)", command=self.edit_product_price, bg="#FF9800", fg="white")
-            btn_edit_price.pack(fill=tk.X, pady=2)
-
-        # ----- الجزء الأيسر: الفاتورة والحساب -----
-        tk.Label(left_frame, text="الفاتورة الحالية", font=("Arial", 14, "bold"), bg="#f0f0f0").pack(pady=5)
-
-        self.cart_tree = ttk.Treeview(left_frame, columns=("Name", "Price"), show="headings")
-        self.cart_tree.heading("Name", text="الصنف")
-        self.cart_tree.heading("Price", text="السعر")
-        self.cart_tree.pack(fill=tk.BOTH, expand=True, pady=5)
-
-        self.lbl_subtotal = tk.Label(left_frame, text="المجموع الأصلي: 0.00", font=("Arial", 11), bg="#f0f0f0")
-        self.lbl_subtotal.pack(anchor="w")
-
-        self.lbl_discount = tk.Label(left_frame, text="الخصم: 0.00", font=("Arial", 11), fg="red", bg="#f0f0f0")
-        self.lbl_discount.pack(anchor="w")
-
-        self.lbl_total = tk.Label(left_frame, text="الصافي النهائي: 0.00", font=("Arial", 14, "bold"), fg="green", bg="#f0f0f0")
-        self.lbl_total.pack(anchor="w", pady=5)
-
-        btn_discount = tk.Button(left_frame, text="إضافة خصم (يتطلب صلاحية)", command=self.apply_discount_auth, bg="#9C27B0", fg="white")
-        btn_discount.pack(fill=tk.X, pady=5)
-
-        btn_print = tk.Button(left_frame, text="طباعة الفاتورة وتأديد", command=self.print_receipt, bg="#4CAF50", fg="white", font=("Arial", 12, "bold"))
-        btn_print.pack(fill=tk.X, pady=10)
-
-    def load_products(self):
-        self.product_listbox.delete(0, tk.END)
-        conn = sqlite3.connect("pos_system.db")
-        cursor = conn.cursor()
-        cursor.execute("SELECT id, name, price FROM products")
-        self.products = cursor.fetchall()
-        conn.close()
+        /* قائمة الوجبات */
+        .products-panel { flex: 1.2; overflow-y: auto; }
+        .products-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 10px; margin-top: 10px; }
+        .product-card { background: #e2e8f0; border: none; padding: 15px 10px; border-radius: 6px; cursor: pointer; text-align: center; font-weight: bold; font-size: 15px; color: #0f172a; transition: 0.2s; }
+        .product-card:hover { background: #cbd5e1; transform: translateY(-2px); }
+        .product-card span { display: block; color: #2563eb; font-size: 13px; margin-top: 5px; }
         
-        for p in self.products:
-            self.product_listbox.insert(tk.END, f"{p[1]} - {p[2]:.2f} دينار")
-
-    def add_to_cart(self):
-        selected = self.product_listbox.curselection()
-        if not selected:
-            messagebox.showwarning("تنبيه", "اختر منتجاً أولاً")
-            return
+        /* الفاتورة */
+        .cart-panel { flex: 1; display: flex; flex-direction: column; justify-content: space-between; }
+        .cart-table { width: 100%; border-collapse: collapse; margin-bottom: 10px; }
+        .cart-table th, .cart-table td { border-bottom: 1px solid #e2e8f0; padding: 8px; text-align: right; }
+        .cart-items-wrapper { flex: 1; overflow-y: auto; }
         
-        product = self.products[selected[0]]
-        self.cart.append(product)
-        self.cart_tree.insert("", tk.END, values=(product[1], f"{product[2]:.2f}"))
-        self.update_totals()
-
-    def update_totals(self):
-        subtotal = sum(p[2] for p in self.cart)
-        total = max(0.0, subtotal - self.discount)
+        /* الحسابات والأسعار */
+        .summary-box { background: #f8fafc; border: 1px solid #e2e8f0; padding: 10px; border-radius: 6px; margin-top: 10px; }
+        .summary-line { display: flex; justify-content: space-between; margin-bottom: 5px; font-size: 15px; }
+        .old-price { text-decoration: line-through; color: #ef4444; }
+        .final-price { font-size: 20px; font-weight: bold; color: #16a34a; }
         
-        self.lbl_subtotal.config(text=f"المجموع الأصلي: {subtotal:.2f}")
-        self.lbl_discount.config(text=f"الخصم: {self.discount:.2f}")
-        self.lbl_total.config(text=f"الصافي النهائي: {total:.2f}")
-
-    def apply_discount_auth(self):
-        # إذا كان المستخدم أدمن يطبق الخصم فوراً، إذا كان كاشير يطلب باس الأدمن
-        if self.role == "Admin":
-            self.ask_discount_amount()
-        else:
-            self.verify_admin_pass(on_success=self.ask_discount_amount)
-
-    def verify_admin_pass(self, on_success):
-        win = tk.Toplevel(self.root)
-        win.title("تأكيد صلاحية المشرف")
-        win.geometry("300x150")
+        /* الأزرار */
+        .actions { display: flex; gap: 10px; margin-top: 10px; }
+        .btn { flex: 1; padding: 12px; border: none; border-radius: 6px; font-size: 16px; font-weight: bold; cursor: pointer; }
+        .btn-discount { background: #8b5cf6; color: white; }
+        .btn-print { background: #16a34a; color: white; }
+        .btn-danger { background: #ef4444; color: white; width: 30px; height: 30px; padding: 0; border-radius: 4px; }
         
-        tk.Label(win, text="أدخل كلمة سر المشرف لعمل الخصم:").pack(pady=10)
-        pass_entry = tk.Entry(win, show="*")
-        pass_entry.pack(pady=5)
+        /* تنسيق الطباعة الحرارية */
+        @media print {
+            body * { visibility: hidden; }
+            #receipt-print, #receipt-print * { visibility: visible; }
+            #receipt-print { position: absolute; left: 0; top: 0; width: 80mm; font-family: monospace; font-size: 12px; }
+            .no-print { display: none !important; }
+        }
+    </style>
+</head>
+<body>
 
-        def check():
-            conn = sqlite3.connect("pos_system.db")
-            cursor = conn.cursor()
-            cursor.execute("SELECT * FROM users WHERE role='Admin' AND password=?", (pass_entry.get(),))
-            admin = cursor.fetchone()
-            conn.close()
+<header class="no-print">
+    <h1>كاشير الريس</h1>
+    <div class="user-info">
+        <span>المستخدم: <strong id="current-user">كاشير</strong> (<span id="user-role">صلاحيات محدودة</span>)</span>
+        <button onclick="switchUser()" style="padding: 5px 10px; cursor: pointer;">تغيير المستخدم</button>
+    </div>
+</header>
 
-            if admin:
-                win.destroy()
-                on_success()
-            else:
-                messagebox.showerror("خطأ", "كلمة سر المشرف غير صحيحة!")
+<div class="container no-print">
+    <!-- قائمة المنتجات -->
+    <div class="panel products-panel">
+        <h3>قائمة الوجبات والساندويشات</h3>
+        <div class="products-grid" id="products-list"></div>
+    </div>
 
-        tk.Button(win, text="موافق", command=check, bg="#4CAF50", fg="white").pack(pady=10)
+    <!-- الفاتورة والتفاصيل -->
+    <div class="panel cart-panel">
+        <h3>الفاتورة الحالية</h3>
+        <div class="cart-items-wrapper">
+            <table class="cart-table">
+                <thead>
+                    <tr><th>الصنف</th><th>السعر</th><th>إجراء</th></tr>
+                </thead>
+                <tbody id="cart-rows"></tbody>
+            </table>
+        </div>
 
-    def ask_discount_amount(self):
-        win = tk.Toplevel(self.root)
-        win.title("إدخال الخصم")
-        win.geometry("250x150")
+        <div class="summary-box">
+            <div class="summary-line">
+                <span>المجموع الأصلي:</span>
+                <span id="subtotal-val">0.00</span>
+            </div>
+            <div class="summary-line" id="discount-row" style="display: none; color: #ef4444;">
+                <span>الخصم:</span>
+                <span id="discount-val">-0.00</span>
+            </div>
+            <hr>
+            <div class="summary-line final-price">
+                <span>الصافي النهائي:</span>
+                <span id="total-val">0.00</span>
+            </div>
+        </div>
 
-        tk.Label(win, text="قيمة الخصم:").pack(pady=10)
-        disc_entry = tk.Entry(win)
-        disc_entry.pack(pady=5)
+        <div class="actions">
+            <button class="btn btn-discount" onclick="handleDiscount()">إضافة خصم</button>
+            <button class="btn btn-print" onclick="processOrder()">طباعة وقص الورقة</button>
+        </div>
+    </div>
+</div>
 
-        def set_disc():
-            try:
-                self.discount = float(disc_entry.get())
-                self.update_totals()
-                win.destroy()
-            except ValueError:
-                messagebox.showerror("خطأ", "يرجى إدخال رقم صحيح")
+<!-- القالب المخصص للطباعة فقط -->
+<div id="receipt-print" style="display: none;"></div>
 
-        tk.Button(win, text="تطبيق", command=set_disc).pack(pady=10)
+<script>
+    // المنتجات الافتراضية
+    const products = [
+        { id: 1, name: "وجبة شاورما", price: 3.50 },
+        { id: 2, name: "ساندويش برغر", price: 2.50 },
+        { id: 3, name: "وجبة دجاج", price: 4.50 },
+        { id: 4, name: "بطاطا حجم كبير", price: 1.20 },
+        { id: 5, name: "عصير طازج", price: 1.00 }
+    ];
 
-    def edit_product_price(self):
-        selected = self.product_listbox.curselection()
-        if not selected:
-            messagebox.showwarning("تنبيه", "اختر منتجاً لتعديل سعره")
-            return
+    let cart = [];
+    let discountAmount = 0;
+    let currentUser = { name: "كاشير", role: "Cashier" };
+    const ADMIN_PIN = "1234";
+
+    // تحميل المنتجات
+    function renderProducts() {
+        const container = document.getElementById('products-list');
+        container.innerHTML = '';
+        products.forEach(p => {
+            container.innerHTML += `
+                <button class="product-card" onclick="addToCart('${p.name}', ${p.price})">
+                    ${p.name}
+                    <span>${p.price.toFixed(2)} د.أ</span>
+                </button>
+            `;
+        });
+    }
+
+    function addToCart(name, price) {
+        cart.push({ name, price });
+        updateCartUI();
+    }
+
+    function removeFromCart(index) {
+        cart.splice(index, 1);
+        updateCartUI();
+    }
+
+    function updateCartUI() {
+        const tbody = document.getElementById('cart-rows');
+        tbody.innerHTML = '';
+        let subtotal = 0;
+
+        cart.forEach((item, index) => {
+            subtotal += item.price;
+            tbody.innerHTML += `
+                <tr>
+                    <td>${item.name}</td>
+                    <td>${item.price.toFixed(2)}</td>
+                    <td><button class="btn-danger" onclick="removeFromCart(${index})">×</button></td>
+                </tr>
+            `;
+        });
+
+        let total = Math.max(0, subtotal - discountAmount);
+
+        const subtotalEl = document.getElementById('subtotal-val');
+        subtotalEl.innerText = subtotal.toFixed(2);
         
-        product = self.products[selected[0]]
+        if (discountAmount > 0) {
+            subtotalEl.classList.add('old-price');
+            document.getElementById('discount-row').style.display = 'flex';
+            document.getElementById('discount-val').innerText = `-${discountAmount.toFixed(2)}`;
+        } else {
+            subtotalEl.classList.remove('old-price');
+            document.getElementById('discount-row').style.display = 'none';
+        }
+
+        document.getElementById('total-val').innerText = total.toFixed(2);
+    }
+
+    // إضافة الخصم بالصلاحيات
+    function handleDiscount() {
+        if (currentUser.role === "Cashier") {
+            let pin = prompt("أدخل كلمة سر المشرف لعمل الخصم:");
+            if (pin !== ADMIN_PIN) {
+                alert("كلمة السر خاطئة! الخصم متاح للمشرفين فقط.");
+                return;
+            }
+        }
         
-        win = tk.Toplevel(self.root)
-        win.title("تعديل السعر")
-        win.geometry("250x150")
+        let val = parseFloat(prompt("أدخل قيمة الخصم:"));
+        if (!isNaN(val) && val >= 0) {
+            discountAmount = val;
+            updateCartUI();
+        }
+    }
 
-        tk.Label(win, text=f"السعر الجديد لـ ({product[1]}):").pack(pady=10)
-        price_entry = tk.Entry(win)
-        price_entry.insert(0, str(product[2]))
-        price_entry.pack(pady=5)
+    // تغيير بين الكاشير والمدير
+    function switchUser() {
+        let pin = prompt("أدخل كلمة السر (1234 للمدير / 1111 للكاشير):");
+        if (pin === "1234") {
+            currentUser = { name: "المدير", role: "Admin" };
+        } else if (pin === "1111") {
+            currentUser = { name: "كاشير 1", role: "Cashier" };
+        } else {
+            alert("كلمة السر غير صحيحة!");
+            return;
+        }
+        document.getElementById('current-user').innerText = currentUser.name;
+        document.getElementById('user-role').innerText = currentUser.role === "Admin" ? "مدير بالنظام" : "صلاحيات محدودة";
+    }
 
-        def save_price():
-            try:
-                new_price = float(price_entry.get())
-                conn = sqlite3.connect("pos_system.db")
-                cursor = conn.cursor()
-                cursor.execute("UPDATE products SET price=? WHERE id=?", (new_price, product[0]))
-                conn.commit()
-                conn.close()
-                win.destroy()
-                self.load_products()
-            except ValueError:
-                messagebox.showerror("خطأ", "السعر غير صحيح")
+    // إصدار أمر الطباعة
+    function processOrder() {
+        if (cart.length === 0) {
+            alert("السلة فارغة!");
+            return;
+        }
 
-        tk.Button(win, text="حفظ", command=save_price).pack(pady=10)
+        let subtotal = cart.reduce((a, b) => a + b.price, 0);
+        let total = Math.max(0, subtotal - discountAmount);
 
-    def print_receipt(self):
-        if not self.cart:
-            messagebox.showwarning("تنبيه", "الفاتورة فارغة!")
-            return
+        let printHTML = `
+            <div style="text-align: center; width: 100%;">
+                <h2 style="margin: 5px 0;">مطعم كاشير الريس</h2>
+                <p style="margin: 2px 0;">فاتورة مبيعات - ${new Date().toLocaleTimeString('ar-EG')}</p>
+                <p style="margin: 2px 0;">الكاشير: ${currentUser.name}</p>
+                <p>--------------------------------</p>
+            </div>
+            <table style="width: 100%; font-size: 12px; text-align: right;">
+        `;
 
-        subtotal = sum(p[2] for p in self.cart)
-        total = max(0.0, subtotal - self.discount)
+        cart.forEach(item => {
+            printHTML += `<tr><td>${item.name}</td><td style="text-align:left">${item.price.toFixed(2)}</td></tr>`;
+        });
 
-        # بناء نص الفاتورة للطباعة
-        receipt_text = "====== فاتورة المبيعات ======\n"
-        receipt_text += f"الكاشير: {self.username}\n"
-        receipt_text += "-----------------------------\n"
-        
-        for item in self.cart:
-            receipt_text += f"{item[1]} : {item[2]:.2f}\n"
+        printHTML += `</table><p>--------------------------------</p><div style="font-size: 13px;">`;
 
-        receipt_text += "-----------------------------\n"
-        
-        if self.discount > 0:
-            # شطب السعر الأصلي وإظهار الخصم والسعر الجديد
-            receipt_text += f"السعر الأصلي: ~~ {subtotal:.2f} ~~\n"
-            receipt_text += f"خصم: -{self.discount:.2f}\n"
-            receipt_text += f"السعر الجديد: {total:.2f}\n"
-        else:
-            receipt_text += f"المجموع الكلي: {total:.2f}\n"
+        if (discountAmount > 0) {
+            printHTML += `
+                <div>السعر الأصلي: <span style="text-decoration: line-through;">${subtotal.toFixed(2)}</span></div>
+                <div>الخصم: -${discountAmount.toFixed(2)}</div>
+                <div style="font-weight: bold; font-size: 15px;">السعر الجديد: ${total.toFixed(2)} د.أ</div>
+            `;
+        } else {
+            printHTML += `<div style="font-weight: bold; font-size: 15px;">المجموع الكلي: ${total.toFixed(2)} د.أ</div>`;
+        }
 
-        receipt_text += "=============================\n"
-        receipt_text += "   شكراً لزيارتكم!   \n"
+        printHTML += `</div><p style="text-align: center; margin-top: 15px;">شكراً لزيارتكم!</p>`;
 
-        # حفظ الفاتورة في ملف مؤقت وإرسالها للطابعة
-        temp_file = os.path.join(tempfile.gettempdir(), "receipt.txt")
-        with open(temp_file, "w", encoding="utf-8") as f:
-            f.write(receipt_text)
+        const receiptContainer = document.getElementById('receipt-print');
+        receiptContainer.innerHTML = printHTML;
+        receiptContainer.style.display = 'block';
 
-        # إرسال لأمر الطباعة حسب نظام التشغيل
-        try:
-            if os.name == 'nt': # Windows
-                os.startfile(temp_file, "print")
-            else: # Linux/Mac
-                os.system(f"lpr {temp_file}")
-            messagebox.showinfo("نجاح", "تم إرسال الفاتورة للطابعة بنجاح.")
-        except Exception as e:
-            messagebox.showerror("خطأ طباعة", f"تعذر الطباعة: {e}")
+        // أمر الطباعة
+        window.print();
 
-        # تفريغ السلة بعد الطباعة
-        self.cart.clear()
-        self.discount = 0.0
-        for item in self.cart_tree.get_children():
-            self.cart_tree.delete(item)
-        self.update_totals()
+        // إعادة ضبط السلة بعد الطباعة
+        receiptContainer.style.display = 'none';
+        cart = [];
+        discountAmount = 0;
+        updateCartUI();
+    }
 
-# ================= 4. التشغيل الرئيسي =================
-if __name__ == "__main__":
-    init_db()
-    
-    def start_pos(username, role):
-        pos_root = tk.Tk()
-        POSSystem(pos_root, username, role)
-        pos_root.mainloop()
+    renderProducts();
+</script>
 
-    login_root = tk.Tk()
-    LoginWindow(login_root, start_pos)
-    login_root.mainloop()
-
+</body>
+</html>
