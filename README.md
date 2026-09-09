@@ -1,0 +1,407 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>نظام كاشير الريس - الشامل المتطور</title>
+    <style>
+        :root {
+            --primary-orange: #ff7300;
+            --dark-orange: #e06500;
+            --bg-dark: #121212;
+            --card-bg: #1e1e1e;
+            --panel-bg: #252525;
+            --text-light: #f5f5f5;
+            --border-color: #333;
+            --green-accent: #10b981;
+            --red-accent: #ef4444;
+            --blue-accent: #3b82f6;
+        }
+
+        * { box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        body { margin: 0; padding: 0; background-color: var(--bg-dark); color: var(--text-light); }
+
+        nav {
+            background: rgba(30, 30, 30, 0.95);
+            backdrop-filter: blur(10px);
+            padding: 12px 5%;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid var(--border-color);
+            position: sticky; top: 0; z-index: 100;
+        }
+
+        .logo { font-size: 20px; font-weight: bold; color: var(--primary-orange); display: flex; align-items: center; gap: 8px; }
+        .nav-links { display: flex; gap: 15px; align-items: center; }
+        .nav-links a { color: var(--text-light); text-decoration: none; font-size: 13px; font-weight: 500; }
+
+        .btn { padding: 10px 18px; border-radius: 8px; border: none; font-weight: bold; cursor: pointer; text-decoration: none; font-size: 13px; transition: 0.2s; }
+        .btn-orange { background: var(--primary-orange); color: #000; }
+        .btn-orange:hover { background: var(--dark-orange); }
+        .btn-outline { border: 1px solid var(--border-color); color: #fff; background: var(--card-bg); }
+        .btn-red { background: var(--red-accent); color: #fff; }
+        .btn-blue { background: var(--blue-accent); color: #fff; }
+
+        .hero { padding: 40px 20px; text-align: center; background: radial-gradient(circle at center, rgba(255, 115, 0, 0.15) 0%, transparent 70%); }
+        .promo-badge { background: rgba(255, 115, 0, 0.2); border: 1px solid var(--primary-orange); color: var(--primary-orange); padding: 6px 14px; border-radius: 20px; font-size: 12px; font-weight: bold; display: inline-block; margin-bottom: 15px; }
+
+        .section-title { text-align: center; margin: 30px 0 15px 0; font-size: 20px; color: var(--primary-orange); }
+
+        .pricing-grid, .payment-methods-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 15px; max-width: 900px; margin: 0 auto; padding: 0 20px; }
+        .pricing-card, .payment-card { background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 12px; padding: 20px; text-align: center; }
+        .pricing-card.popular { border: 2px solid var(--primary-orange); }
+
+        .box-wrapper { max-width: 900px; margin: 30px auto; padding: 0 20px; display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px; }
+        .support-box, .redeem-box { background: var(--panel-bg); border: 1px solid var(--border-color); padding: 20px; border-radius: 12px; text-align: center; }
+        
+        .code-input, input, select { width: 100%; padding: 10px; margin: 8px 0; background: var(--card-bg); border: 1px solid var(--border-color); color: #fff; border-radius: 8px; }
+
+        /* POS Complete View */
+        #pos-view { display: none; padding: 15px; max-width: 1200px; margin: 0 auto; }
+        .pos-header { display: flex; justify-content: space-between; align-items: center; background: var(--panel-bg); padding: 12px 20px; border-radius: 10px; border: 1px solid var(--border-color); margin-bottom: 15px; }
+        .pos-main-grid { display: grid; grid-template-columns: 2fr 1fr; gap: 15px; }
+        .menu-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 10px; margin-bottom: 15px; }
+        .item-card { background: var(--card-bg); border: 1px solid var(--border-color); padding: 12px; border-radius: 8px; text-align: center; cursor: pointer; }
+        .item-card:hover { border-color: var(--primary-orange); }
+
+        .add-item-box { background: var(--panel-bg); border: 1px solid var(--border-color); padding: 15px; border-radius: 10px; margin-bottom: 15px; }
+
+        .cart-panel { background: var(--panel-bg); border: 1px solid var(--border-color); border-radius: 10px; padding: 15px; display: flex; flex-direction: column; }
+        .cart-item { display: flex; flex-direction: column; background: var(--card-bg); border: 1px solid var(--border-color); padding: 8px; border-radius: 6px; margin-bottom: 8px; }
+        .cart-item-row { display: flex; justify-content: space-between; align-items: center; }
+
+        .stats-summary { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 15px; background: var(--panel-bg); padding: 10px; border-radius: 8px; border: 1px solid var(--border-color); }
+        .stat-box { text-align: center; font-size: 12px; }
+        .stat-box strong { display: block; font-size: 16px; color: var(--primary-orange); }
+
+        footer { text-align: center; padding: 20px; border-top: 1px solid var(--border-color); margin-top: 30px; font-size: 12px; color: #666; }
+    </style>
+</head>
+<body>
+
+<nav>
+    <div class="logo">🍔 نظام كاشير الريس المتكامل</div>
+    <div class="nav-links">
+        <a href="#pricing">الاشتراكات</a>
+        <a href="#payment">طرق الدفع</a>
+        <button onclick="checkAndLaunchPOS()" class="btn btn-orange" style="font-size:11px;">دخول الكاشير ←</button>
+    </div>
+</nav>
+
+<!-- Landing View -->
+<div id="landing-view">
+    <section class="hero">
+        <div class="promo-badge">🎉 تجربة مجانية 7 أيام بكود: FREE7DAYS</div>
+        <h1 style="margin:0 0 10px 0;">اشتراكات نظام كاشير الريس المتكامل</h1>
+        <p style="color:#aaa; font-size:14px;">إدارة الشفتات، إضافة الخيارات، تقارير المبيعات اليومية، تعليق الطلبات والطباعة.</p>
+    </section>
+
+    <section id="pricing">
+        <h2 class="section-title">خطط الاشتراكات</h2>
+        <div class="pricing-grid">
+            <div class="pricing-card">
+                <h3>الاشتراك الشهري</h3>
+                <div style="font-size:24px; font-weight:bold; color:#fff; margin:10px 0;">50 <span style="font-size:12px; color:#888;">د.أ / شهر</span></div>
+                <a href="#payment" class="btn btn-outline" style="display:block;">اختر طريقة الدفع</a>
+            </div>
+            <div class="pricing-card popular">
+                <h3>الاشتراك السنوي</h3>
+                <div style="font-size:24px; font-weight:bold; color:#fff; margin:10px 0;">400 <span style="font-size:12px; color:#888;">د.أ / سنة</span></div>
+                <a href="#payment" class="btn btn-orange" style="display:block;">اختر طريقة الدفع</a>
+            </div>
+        </div>
+    </section>
+
+    <section id="payment">
+        <h2 class="section-title">طرق الدفع المتاحة</h2>
+        <div class="payment-methods-grid">
+            <div class="payment-card">
+                <h4>📱 زين كاش (Zain Cash)</h4>
+                <p style="direction:ltr; font-weight:bold;">0791371566</p>
+            </div>
+            <div class="payment-card">
+                <h4>🏦 كليك (CliQ)</h4>
+                <p style="direction:ltr; font-weight:bold;">ALREES / 0791371566</p>
+            </div>
+            <div class="payment-card">
+                <h4>📞 كاش / مباشر</h4>
+                <p style="direction:ltr; font-weight:bold;">0791371566</p>
+            </div>
+        </div>
+    </section>
+
+    <div class="box-wrapper" id="contact">
+        <div class="support-box">
+            <h3 style="color:var(--primary-orange); margin-top:0;">التواصل والدعم المباشر</h3>
+            <p style="font-size:12px; color:#aaa;">للمدير (الريس): 0791371566</p>
+            <a href="https://wa.me/962791371566" target="_blank" class="btn btn-orange" style="display:inline-block; margin-top:10px;">تواصل واتساب</a>
+        </div>
+
+        <div class="redeem-box">
+            <h3 style="color:var(--primary-orange); margin-top:0;">تفعيل الكود والدخول</h3>
+            <p style="font-size:12px; color:#aaa;">أدخل كود الاشتراك أو الهدية للدخول فوراً:</p>
+            <input type="text" id="gift-code-input" class="code-input" placeholder="أدخل الكود هنا...">
+            <button onclick="redeemCode()" class="btn btn-orange" style="width: 100%;">تفعيل والدخول للكاشير 🚀</button>
+            <div id="status-msg" style="margin-top:10px; font-size:12px;"></div>
+        </div>
+    </div>
+</div>
+
+<!-- Complete POS View -->
+<div id="pos-view">
+    <div class="pos-header">
+        <div>
+            <h3 style="margin:0; color:var(--primary-orange);">نظام كاشير الريس المتطور</h3>
+            <span id="sub-status" style="font-size:11px; color:#10b981;">الحساب نشط</span>
+        </div>
+        <div style="display:flex; gap:10px; align-items:center;">
+            <select id="shift-select" style="width:auto; margin:0; padding:5px 10px; font-size:12px;">
+                <option value="صباحي">الشفت الصباحي</option>
+                <option value="مسائي">الشفت المسائي</option>
+            </select>
+            <button onclick="exitPOS()" class="btn btn-outline" style="font-size:11px; padding:6px 12px;">خروج</button>
+        </div>
+    </div>
+
+    <!-- Stats Summary Section -->
+    <div class="stats-summary">
+        <div class="stat-box">إجمالي المبيعات<strong id="stat-total-sales">0.000 د.أ</strong></div>
+        <div class="stat-box">عدد الفواتير<strong id="stat-invoice-count">0</strong></div>
+        <div class="stat-box">الطلبات المعلقة<strong id="stat-pending-count">0</strong></div>
+    </div>
+
+    <div class="pos-main-grid">
+        <!-- Menu Section & Add Options Controls -->
+        <div>
+            <div class="add-item-box">
+                <h5 style="margin:0 0 8px 0; color:var(--primary-orange);">➕ إضافة صنف جديد للقائمة</h5>
+                <div style="display:flex; gap:8px;">
+                    <input type="text" id="new-item-name" placeholder="اسم الصنف الجديد..." style="margin:0; font-size:12px;">
+                    <input type="number" id="new-item-price" placeholder="السعر (د.أ)" step="0.1" style="margin:0; font-size:12px; width:100px;">
+                    <button onclick="addNewCustomMenuItem()" class="btn btn-orange" style="padding:6px 12px; font-size:12px; white-space:nowrap;">إضافة</button>
+                </div>
+            </div>
+
+            <h4 style="color:#aaa; margin:0 0 10px 0;">قائمة الأصناف</h4>
+            <div class="menu-grid" id="menu-grid-container">
+                <div class="item-card" onclick="addToCart('وجبة صاج دجاج', 2.500)">
+                    <h5 style="margin:5px 0;">وجبة صاج دجاج</h5>
+                    <span style="color:var(--primary-orange); font-size:12px;">2.500 د.أ</span>
+                </div>
+                <div class="item-card" onclick="addToCart('وجبة صاج لحم', 3.000)">
+                    <h5 style="margin:5px 0;">وجبة صاج لحم</h5>
+                    <span style="color:var(--primary-orange); font-size:12px;">3.000 د.أ</span>
+                </div>
+                <div class="item-card" onclick="addToCart('سندويش صاج', 1.500)">
+                    <h5 style="margin:5px 0;">سندويش صاج</h5>
+                    <span style="color:var(--primary-orange); font-size:12px;">1.500 د.أ</span>
+                </div>
+                <div class="item-card" onclick="addToCart('بطاطا مقلية', 1.000)">
+                    <h5 style="margin:5px 0;">بطاطا مقلية</h5>
+                    <span style="color:var(--primary-orange); font-size:12px;">1.000 د.أ</span>
+                </div>
+                <div class="item-card" onclick="addToCart('مشروب غازي', 0.500)">
+                    <h5 style="margin:5px 0;">مشروب غازي</h5>
+                    <span style="color:var(--primary-orange); font-size:12px;">0.500 د.أ</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Cart Panel Section -->
+        <div class="cart-panel">
+            <h4 style="margin:0 0 10px 0;">تفاصيل الفاتورة الحالية</h4>
+            <div id="cart-list" style="flex-grow:1; overflow-y:auto; max-height:300px;">
+                <p style="color:#666; text-align:center; font-size:12px;">لا يوجد أصناف بالفاتورة</p>
+            </div>
+
+            <div style="margin-top:15px; border-top:1px solid var(--border-color); padding-top:10px;">
+                <div style="display:flex; gap:8px; align-items:center; margin-bottom:8px;">
+                    <span style="font-size:12px; color:#aaa;">طريقة الدفع:</span>
+                    <select id="pay-method" style="margin:0; padding:4px; font-size:11px;">
+                        <option value="كاش">نقداً (كاش)</option>
+                        <option value="بطاقة / كليك">بطاقة / كليك</option>
+                    </select>
+                </div>
+
+                <div style="display:flex; gap:8px; align-items:center; margin-bottom:8px;">
+                    <span style="font-size:12px; color:#aaa;">خصم (د.أ):</span>
+                    <input type="number" id="discount-input" value="0" min="0" step="0.1" onchange="updateCartTotal()" style="margin:0; padding:4px 8px; font-size:12px;">
+                </div>
+
+                <div style="display:flex; justify-content:space-between; font-weight:bold; font-size:16px; margin-bottom:10px;">
+                    <span>المجموع النهائي:</span>
+                    <span id="final-total" style="color:var(--primary-orange);">0.000 د.أ</span>
+                </div>
+
+                <div style="display:grid; grid-template-columns: 1fr 1fr; gap:5px; margin-bottom:5px;">
+                    <button onclick="holdCurrentCart()" class="btn btn-blue" style="padding:6px; font-size:11px;">تعليق الطلب ⏸️</button>
+                    <button onclick="clearCart()" class="btn btn-red" style="padding:6px; font-size:11px;">إلغاء الطلب ✕</button>
+                </div>
+                <button onclick="printInvoice()" class="btn btn-orange" style="width:100%; padding:10px;">طباعة الفاتورة 🖨️</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<footer>جميع الحقوق محفوظة © نظام كاشير الريس المتكامل</footer>
+
+<script>
+    const giftCodes = { "FREE7DAYS": 7, "GIFT7DAYS": 7, "ALREES30": 30, "ALREES365": 365 };
+    let cart = [];
+    let totalSales = 0;
+    let invoiceCount = 0;
+    let pendingCarts = [];
+
+    function applySubscriptionDays(days) {
+        let currentExpiry = localStorage.getItem('alrees_sub_expiry');
+        let baseTime = (currentExpiry && parseInt(currentExpiry) > new Date().getTime()) ? parseInt(currentExpiry) : new Date().getTime();
+        localStorage.setItem('alrees_sub_expiry', (baseTime + (days * 24 * 60 * 60 * 1000)).toString());
+    }
+
+    function isSubscribed() {
+        let expiry = localStorage.getItem('alrees_sub_expiry');
+        return expiry && new Date().getTime() < parseInt(expiry);
+    }
+
+    function getRemainingDays() {
+        let expiry = localStorage.getItem('alrees_sub_expiry');
+        if (!expiry) return 0;
+        return Math.max(0, Math.ceil((parseInt(expiry) - new Date().getTime()) / (1000 * 60 * 60 * 24)));
+    }
+
+    function redeemCode() {
+        let input = document.getElementById('gift-code-input').value.trim().toUpperCase();
+        let msg = document.getElementById('status-msg');
+        if (giftCodes[input]) {
+            applySubscriptionDays(giftCodes[input]);
+            msg.style.color = "#10b981";
+            msg.innerText = "تم التفعيل بنجاح! جاري تحويلك للكاشير...";
+            setTimeout(openPOSView, 1000);
+        } else {
+            msg.style.color = "#ef4444";
+            msg.innerText = "الكود غير صحيح!";
+        }
+    }
+
+    function checkAndLaunchPOS() {
+        if (isSubscribed()) openPOSView();
+        else alert("اشتراكك غير فعال! يرجى أدخل كود التفعيل أولاً.");
+    }
+
+    function openPOSView() {
+        document.getElementById('landing-view').style.display = 'none';
+        document.getElementById('pos-view').style.display = 'block';
+        document.getElementById('sub-status').innerText = `الحساب نشط (المتبقي: ${getRemainingDays()} يوم)`;
+    }
+
+    function exitPOS() {
+        document.getElementById('pos-view').style.display = 'none';
+        document.getElementById('landing-view').style.display = 'block';
+    }
+
+    function addNewCustomMenuItem() {
+        let name = document.getElementById('new-item-name').value.trim();
+        let price = parseFloat(document.getElementById('new-item-price').value);
+
+        if (!name || isNaN(price)) {
+            alert("يرجى إدخال اسم الصنف والسعر بشكل صحيح!");
+            return;
+        }
+
+        let container = document.getElementById('menu-grid-container');
+        let div = document.createElement('div');
+        div.className = 'item-card';
+        div.onclick = function() { addToCart(name, price); };
+        div.innerHTML = `<h5 style="margin:5px 0;">${name}</h5><span style="color:var(--primary-orange); font-size:12px;">${price.toFixed(3)} د.أ</span>`;
+        container.appendChild(div);
+
+        document.getElementById('new-item-name').value = '';
+        document.getElementById('new-item-price').value = '';
+    }
+
+    function addToCart(name, price) {
+        cart.push({ id: Date.now(), name, price, note: "" });
+        renderCart();
+    }
+
+    function updateNote(id, noteText) {
+        let item = cart.find(i => i.id === id);
+        if (item) item.note = noteText;
+    }
+
+    function removeFromCart(id) {
+        cart = cart.filter(i => i.id !== id);
+        renderCart();
+    }
+
+    function clearCart() {
+        cart = [];
+        document.getElementById('discount-input').value = 0;
+        renderCart();
+    }
+
+    function holdCurrentCart() {
+        if (cart.length === 0) return alert("لا يوجد طلب لتعليقه!");
+        pendingCarts.push([...cart]);
+        clearCart();
+        document.getElementById('stat-pending-count').innerText = pendingCarts.length;
+        alert("تم تعليق الطلب بنجاح!");
+    }
+
+    function renderCart() {
+        let container = document.getElementById('cart-list');
+        if (cart.length === 0) {
+            container.innerHTML = '<p style="color:#666; text-align:center; font-size:12px;">لا يوجد أصناف بالفاتورة</p>';
+            updateCartTotal();
+            return;
+        }
+
+        container.innerHTML = '';
+        cart.forEach(item => {
+            let div = document.createElement('div');
+            div.className = 'cart-item';
+            div.innerHTML = `
+                <div class="cart-item-row">
+                    <strong style="font-size:13px;">${item.name}</strong>
+                    <span style="color:var(--primary-orange); font-size:12px;">${item.price.toFixed(3)} د.أ</span>
+                    <button onclick="removeFromCart(${item.id})" style="background:none; border:none; color:var(--red-accent); cursor:pointer; font-size:12px;">✕</button>
+                </div>
+                <input type="text" placeholder="ملاحظة أو خيارات (مثال: بدون ثوم/شطة إضافية)" value="${item.note}" onchange="updateNote(${item.id}, this.value)" style="margin-top:5px; padding:3px 6px; font-size:11px;">
+            `;
+            container.appendChild(div);
+        });
+        updateCartTotal();
+    }
+
+    function updateCartTotal() {
+        let subtotal = cart.reduce((sum, item) => sum + item.price, 0);
+        let discount = parseFloat(document.getElementById('discount-input').value) || 0;
+        let final = Math.max(0, subtotal - discount);
+        document.getElementById('final-total').innerText = `${final.toFixed(3)} د.أ`;
+        return final;
+    }
+
+    function printInvoice() {
+        if (cart.length === 0) {
+            alert("الفاتورة فارغة!");
+            return;
+        }
+        let finalTotal = updateCartTotal();
+        let shift = document.getElementById('shift-select').value;
+        let method = document.getElementById('pay-method').value;
+
+        totalSales += finalTotal;
+        invoiceCount++;
+
+        document.getElementById('stat-total-sales').innerText = `${totalSales.toFixed(3)} د.أ`;
+        document.getElementById('stat-invoice-count').innerText = invoiceCount;
+
+        alert(`تم طباعة الفاتورة بنجاح!\nالشفت: ${shift}\nطريقة الدفع: ${method}\nالمبلغ: ${finalTotal.toFixed(3)} د.أ`);
+        clearCart();
+    }
+</script>
+
+</body>
+</html>
+
