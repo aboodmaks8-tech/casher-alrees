@@ -1,385 +1,306 @@
-<!DOCTYPE html>
-<html lang="ar" dir="rtl">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>كاشير مطعم صاج رايز POS</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
-    <style>
-        @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap');
-        body { font-family: 'Cairo', sans-serif; }
-        @media print {
-            body * { visibility: hidden; }
-            #receipt-print-area, #receipt-print-area * { visibility: visible; }
-            #receipt-print-area {
-                position: absolute; left: 0; top: 0; width: 80mm; padding: 5mm; font-size: 12px; color: black;
-            }
-            .no-print { display: none !important; }
-        }
-        .category-tab.active {
-            background-color: #f97316;
-            color: white;
-            box-shadow: 0 4px 6px -1px rgba(249, 115, 22, 0.3);
-        }
-    </style>
-</head>
-<body class="bg-slate-100 text-slate-800 h-screen flex overflow-hidden">
+import sqlite3
+import tkinter as tk
+from tkinter import messagebox, ttk
+import os
+import tempfile
 
-    <!-- الشريط الجانبي -->
-    <aside class="w-20 bg-slate-900 text-white flex flex-col items-center py-6 justify-between no-print">
-        <div class="flex flex-col items-center gap-8">
-            <div class="w-12 h-12 bg-orange-500 rounded-xl flex items-center justify-center font-bold text-lg shadow-lg shadow-orange-500/30 text-center leading-tight">
-                صاج<br>رايز
-            </div>
-            <nav class="flex flex-col gap-6">
-                <button title="الكاشير" class="p-3 bg-orange-500/20 text-orange-400 rounded-xl hover:bg-orange-500 hover:text-white transition"><i class="fa-solid fa-cash-register text-xl"></i></button>
-            </nav>
-        </div>
-    </aside>
+# ================= 1. قاعدة البيانات =================
+def init_db():
+    conn = sqlite3.connect("pos_system.db")
+    cursor = conn.cursor()
+    
+    # جدول المستخدمين
+    cursor.execute('''CREATE TABLE IF NOT EXISTS users (
+                        id INTEGER PRIMARY KEY AUTOINCREMENT,
+                        username TEXT UNIQUE,
+                        password TEXT,
+                        role TEXT)''')
+    
+    # جدول المنتجات
+    cursor.execute('''CREATE TABLE IF NOT EXISTS products (
+                        id INTEGER PRIMARY KEY AUTOINCREMENT,
+                        name TEXT,
+                        price REAL)''')
+    
+    # إضافة حسابات افتراضية إذا لم تكن موجودة
+    cursor.execute("SELECT * FROM users")
+    if not cursor.fetchall():
+        cursor.execute("INSERT INTO users (username, password, role) VALUES ('admin', '1234', 'Admin')")
+        cursor.execute("INSERT INTO users (username, password, role) VALUES ('cashier', '1111', 'Cashier')")
+        
+        # إضافة منتجات تجريبية
+        cursor.execute("INSERT INTO products (name, price) VALUES ('وجبة شاورما', 3.50)")
+        cursor.execute("INSERT INTO products (name, price) VALUES ('ساندويش برغر', 2.50)")
+        cursor.execute("INSERT INTO products (name, price) VALUES ('عصير طازج', 1.00)")
+        conn.commit()
+    conn.close()
 
-    <!-- المنطقة الرئيسية -->
-    <main class="flex-1 flex overflow-hidden">
-        <!-- قسم الأطعمة والمنتجات -->
-        <section class="flex-1 flex flex-col p-6 overflow-y-auto">
-            <header class="flex justify-between items-center mb-4">
-                <div>
-                    <h1 class="text-2xl font-extrabold text-slate-900">مطعم صاج رايز</h1>
-                    <p class="text-sm text-slate-500">معان - مجمع عامر القرامسة | هاتف: 0782542024</p>
-                </div>
-            </header>
+# ================= 2. شاشة تسجيل الدخول =================
+class LoginWindow:
+    def __init__(self, root, on_login_success):
+        self.root = root
+        self.root.title("تسجيل الدخول - نظام الكاشير")
+        self.root.geometry("350x250")
+        self.on_login_success = on_login_success
 
-            <!-- تبويبات الأقسام الأفقية (تفصل كل قسم لحاله) -->
-            <div class="flex gap-2 border-b border-slate-200 pb-3 mb-4 overflow-x-auto no-print" id="categories-tabs"></div>
+        tk.Label(root, text="تسجيل الدخول", font=("Arial", 16, "bold")).pack(pady=15)
 
-            <!-- شبكة أصناف القسم المختار -->
-            <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3" id="products-grid"></div>
-        </section>
+        tk.Label(root, text="اسم المستخدم:").pack()
+        self.username_entry = tk.Entry(root)
+        self.username_entry.pack(pady=5)
 
-        <!-- قسم الفاتورة -->
-        <section class="w-96 bg-white border-r border-slate-200 flex flex-col shadow-xl">
-            <div class="p-4 border-b border-slate-100 flex justify-between items-center bg-slate-50">
-                <h2 class="font-bold text-lg text-slate-800">الفاتورة الحالية</h2>
-                <button onclick="clearCart()" class="text-xs text-red-500 font-semibold px-2 py-1 border border-red-200 rounded hover:bg-red-50">تفريغ السلة</button>
-            </div>
-            
-            <!-- قائمة عناصر الفاتورة مع التعديل والملاحظات وحذف الصنف -->
-            <div class="flex-1 overflow-y-auto p-4 space-y-3" id="cart-items"></div>
+        tk.Label(root, text="كلمة السر:").pack()
+        self.password_entry = tk.Entry(root, show="*")
+        self.password_entry.pack(pady=5)
 
-            <div class="p-4 border-t border-slate-100 bg-slate-50 space-y-3">
-                <div class="flex justify-between text-xl font-bold border-t pt-2">
-                    <span>الإجمالي:</span>
-                    <span id="total" class="text-orange-600">0.000 د.أ</span>
-                </div>
-                
-                <div class="grid grid-cols-2 gap-2 no-print">
-                    <button onclick="processPayment()" class="py-3 bg-orange-500 hover:bg-orange-600 text-white font-bold rounded-xl shadow-lg shadow-orange-500/30 text-base transition flex items-center justify-center gap-2">
-                        <i class="fa-solid fa-print"></i> طباعة الفاتورة
-                    </button>
-                    <button onclick="clearCart()" class="py-3 bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold rounded-xl text-base transition flex items-center justify-center gap-2">
-                        <i class="fa-solid fa-trash-can"></i> إغلاق / إلغاء
-                    </button>
-                </div>
-            </div>
-        </section>
-    </main>
+        tk.Button(root, text="دخول", command=self.login, bg="#4CAF50", fg="white", width=12).pack(pady=15)
 
-    <!-- فاتورة الطباعة (80mm) -->
-    <div id="receipt-print-area" class="hidden">
-        <div style="text-align: center; border-bottom: 1px dashed #000; padding-bottom: 5px;">
-            <h2 style="margin:0; font-size: 16px;">مطعم صاج رايز</h2>
-            <p style="margin:2px 0; font-size:10px;">معان - مجمع عامر القرامسة</p>
-            <p style="margin:2px 0; font-size:10px;">هاتف: 0782542024</p>
-            <p id="print-date" style="margin:2px 0; font-size:10px;"></p>
-        </div>
-        <table style="width: 100%; margin-top: 10px; text-align: right; border-collapse: collapse;">
-            <thead>
-                <tr style="border-bottom: 1px solid #000;">
-                    <th style="text-align: right;">الصنف والتفاصيل</th>
-                    <th style="text-align: center;">العدد</th>
-                    <th style="text-align: left;">السعر</th>
-                </tr>
-            </thead>
-            <tbody id="print-items"></tbody>
-        </table>
-        <div style="border-top: 1px dashed #000; margin-top: 10px; padding-top: 5px; text-align: left; font-weight: bold;">
-            <p style="margin:0; font-size: 14px;">الإجمالي: <span id="print-total"></span> د.أ</p>
-        </div>
-        <div style="text-align: center; margin-top: 15px; font-size: 10px;">
-            <p>شكراً لزيارتكم!</p>
-        </div>
-    </div>
+    def login(self):
+        username = self.username_entry.get()
+        password = self.password_entry.get()
 
-    <script>
-        const products = [
-            // شاورما عادي
-            { id: 1, name: "ساندويش عادي", price: 0.75, category: "شاورما" },
-            { id: 2, name: "ساندويش سوبر", price: 1.10, category: "شاورما" },
-            { id: 3, name: "ساندويش عادي طحينية وبصل", price: 0.75, category: "شاورما" },
-            { id: 4, name: "ساندويش سوبر طحينية وبصل", price: 1.10, category: "شاورما" },
-            { id: 5, name: "ساندويش فرنسي", price: 1.50, category: "شاورما" },
-            { id: 6, name: "خرطوشة", price: 0.75, category: "شاورما" },
-            { id: 7, name: "وجبة شاورما عادي", price: 1.75, category: "شاورما" },
-            { id: 8, name: "وجبة شاورما سوبر", price: 2.40, category: "شاورما" },
-            { id: 9, name: "وجبة شاورما دبل", price: 3.00, category: "شاورما" },
-            { id: 10, name: "وجبة شاورما تربل", price: 4.00, category: "شاورما" },
-            { id: 11, name: "وجبة شاورما عادي طحينية وبصل", price: 1.75, category: "شاورما" },
-            { id: 12, name: "وجبة شاورما سوبر طحينية وبصل", price: 2.40, category: "شاورما" },
-            { id: 13, name: "وجبة شاورما دبل طحينية وبصل", price: 3.00, category: "شاورما" },
-            { id: 14, name: "وجبة شاورما تربل طحينية وبصل", price: 4.00, category: "شاورما" },
-            { id: 15, name: "وجبة حلبي", price: 3.50, category: "شاورما" },
-            { id: 16, name: "وجبة ايطالي", price: 2.75, category: "شاورما" },
-            { id: 17, name: "وجبة ايطالي بالكريمة", price: 3.25, category: "شاورما" },
-            { id: 18, name: "وجبة فرنسي", price: 2.50, category: "شاورما" },
-            { id: 19, name: "نص اوقية شاورما حل", price: 1.75, category: "شاورما" },
-            { id: 20, name: "اوقية شاورما حل", price: 3.50, category: "شاورما" },
-            { id: 21, name: "نص كيلو شاورما حل", price: 6.00, category: "شاورما" },
-            { id: 22, name: "كيلو شاورما حل", price: 12.00, category: "شاورما" },
-            { id: 23, name: "سدر شاورما صغير", price: 5.50, category: "شاورما" },
-            { id: 24, name: "سدر شاورما عائلي", price: 8.00, category: "شاورما" },
-            { id: 25, name: "سدر شاورما العملاق", price: 15.00, category: "شاورما" },
+        conn = sqlite3.connect("pos_system.db")
+        cursor = conn.cursor()
+        cursor.execute("SELECT role FROM users WHERE username=? AND password=?", (username, password))
+        user = cursor.fetchone()
+        conn.close()
 
-            // شاورما صاج
-            { id: 26, name: "ساندويش صاج عادي", price: 0.90, category: "شاورما صاج" },
-            { id: 27, name: "ساندويش صاج سوبر", price: 1.35, category: "شاورما صاج" },
-            { id: 28, name: "ساندويش صاج فرنسي", price: 1.75, category: "شاورما صاج" },
-            { id: 29, name: "وجبة شاورما صاج عادي", price: 2.25, category: "شاورما صاج" },
-            { id: 30, name: "وجبة شاورما صاج سوبر", price: 3.00, category: "شاورما صاج" },
-            { id: 31, name: "وجبة شاورما صاج دبل", price: 3.50, category: "شاورما صاج" },
-            { id: 32, name: "وجبة شاورما صاج تربل", price: 4.75, category: "شاورما صاج" },
-            { id: 33, name: "وجبة حلبي صاج", price: 3.50, category: "شاورما صاج" },
-            { id: 34, name: "وجبة ايطالي صاج", price: 3.00, category: "شاورما صاج" },
-            { id: 35, name: "وجبة ايطالي بالكريمة صاج", price: 3.50, category: "شاورما صاج" },
-            { id: 36, name: "وجبة فرنسي صاج", price: 2.75, category: "شاورما صاج" },
-            { id: 37, name: "سدر صاج عائلي صغير", price: 6.50, category: "شاورما صاج" },
-            { id: 38, name: "سدر صاج عائلي وسط", price: 9.00, category: "شاورما صاج" },
-            { id: 39, name: "سدر صاج عائلي كبير", price: 16.00, category: "شاورما صاج" },
+        if user:
+            role = user[0]
+            self.root.destroy()
+            self.on_login_success(username, role)
+        else:
+            messagebox.showerror("خطأ", "اسم المستخدم أو كلمة السر غير صحيحة")
 
-            // وجبات ورز
-            { id: 40, name: "تشكن فرايز", price: 2.50, category: "وجبات ورز" },
-            { id: 41, name: "وجبة صحية", price: 3.00, category: "وجبات ورز" },
-            { id: 42, name: "فولكانو فرايز", price: 3.00, category: "وجبات ورز" },
-            { id: 43, name: "كبسة - وجبة الطالب", price: 1.50, category: "وجبات ورز" },
-            { id: 44, name: "كبسة - نص دجاجة وجبة", price: 3.00, category: "وجبات ورز" },
-            { id: 45, name: "كبسة - نصف دجاجة سدر", price: 3.50, category: "وجبات ورز" },
-            { id: 46, name: "كبسة - دجاجة كاملة", price: 6.00, category: "وجبات ورز" },
-            { id: 47, name: "مندي - وجبة الطالب", price: 1.50, category: "وجبات ورز" },
-            { id: 48, name: "مندي - نص دجاجة وجبة", price: 3.00, category: "وجبات ورز" },
-            { id: 49, name: "مندي - نصف دجاجة سدر", price: 3.50, category: "وجبات ورز" },
-            { id: 50, name: "مندي - دجاجة كاملة", price: 6.00, category: "وجبات ورز" },
-            { id: 51, name: "بخاري - وجبة الطالب", price: 1.50, category: "وجبات ورز" },
-            { id: 52, name: "بخاري - نص دجاجة وجبة", price: 3.00, category: "وجبات ورز" },
-            { id: 53, name: "بخاري - نصف دجاجة سدر", price: 3.50, category: "وجبات ورز" },
-            { id: 54, name: "بخاري - دجاجة كاملة", price: 6.00, category: "وجبات ورز" },
-            { id: 55, name: "أوزي - وجبة الطالب", price: 1.50, category: "وجبات ورز" },
-            { id: 56, name: "أوزي - نص دجاجة وجبة", price: 3.00, category: "وجبات ورز" },
-            { id: 57, name: "أوزي - نصف دجاجة سدر", price: 3.50, category: "وجبات ورز" },
-            { id: 58, name: "أوزي - دجاجة كاملة", price: 6.00, category: "وجبات ورز" },
-            { id: 59, name: "منسف - وجبة الطالب", price: 2.00, category: "وجبات ورز" },
-            { id: 60, name: "منسف - نص دجاجة وجبة", price: 3.75, category: "وجبات ورز" },
-            { id: 61, name: "منسف - نصف دجاجة سدر", price: 4.25, category: "وجبات ورز" },
-            { id: 62, name: "منسف - دجاجة كاملة", price: 7.50, category: "وجبات ورز" },
+# ================= 3. شاشة POS الرئيسية =================
+class POSSystem:
+    def __init__(self, root, username, role):
+        self.root = root
+        self.root.title(f"نظام POS - المستخدم: {username} ({role})")
+        self.root.geometry("900x600")
+        
+        self.username = username
+        self.role = role
+        self.cart = []
+        self.discount = 0.0
 
-            // برجر
-            { id: 63, name: "ساندويش صدر مشوي دجاج", price: 1.75, category: "برجر" },
-            { id: 64, name: "ساندويش رويال رايز برجر مقلي دجاج", price: 1.75, category: "برجر" },
-            { id: 65, name: "ساندويش الفريدو صدر مشوي دجاج", price: 1.75, category: "برجر" },
-            { id: 66, name: "ساندويش ماشروم كريمه برجر لحم", price: 2.75, category: "برجر" },
-            { id: 67, name: "ساندويش SG اس جي", price: 2.50, category: "برجر" },
-            { id: 68, name: "ساندويش سبيشال رايز برجر", price: 2.50, category: "برجر" },
-            { id: 69, name: "وجبة إسكالوب اطفال", price: 1.00, category: "برجر" },
-            { id: 70, name: "وجبة إسكالوب", price: 2.50, category: "برجر" },
-            { id: 71, name: "وجبة صدر مشوي برجر دجاج", price: 2.75, category: "برجر" },
-            { id: 72, name: "وجبة رويال رايز برجر مقلي دجاج", price: 2.75, category: "برجر" },
-            { id: 73, name: "وجبة الفريدو صدر مشوي دجاج", price: 2.75, category: "برجر" },
-            { id: 74, name: "وجبة ماشروم كريمه برجر لحم", price: 3.75, category: "برجر" },
-            { id: 75, name: "وجبة SG اس جي", price: 3.50, category: "برجر" },
-            { id: 76, name: "وجبة سبيشال رايز برجر", price: 3.50, category: "برجر" },
+        # الهيكل العام
+        left_frame = tk.Frame(self.root, width=500, bg="#f0f0f0")
+        left_frame.pack(side=tk.LEFT, fill=tk.BOTH, expand=True, padx=10, pady=10)
 
-            // سناكات
-            { id: 77, name: "ساندويش زنجر", price: 1.50, category: "سناكات" },
-            { id: 78, name: "ساندويش زنجر بالكريمة", price: 1.75, category: "سناكات" },
-            { id: 79, name: "ساندويش ستربس زنجر", price: 1.75, category: "سناكات" },
-            { id: 80, name: "ساندويش فاهيتا", price: 1.50, category: "سناكات" },
-            { id: 81, name: "ساندويش مكسيكي", price: 1.50, category: "سناكات" },
-            { id: 82, name: "ساندويش شيش", price: 1.50, category: "سناكات" },
-            { id: 83, name: "ساندويش ستيك دجاج", price: 1.75, category: "سناكات" },
-            { id: 84, name: "ساندويش ستيك لحم", price: 2.00, category: "سناكات" },
-            { id: 85, name: "ساندويش زنقة", price: 2.00, category: "سناكات" },
-            { id: 86, name: "ساندويش هوتدوج", price: 1.50, category: "سناكات" },
-            { id: 87, name: "وجبة زنجر", price: 2.50, category: "سناكات" },
-            { id: 88, name: "وجبة زنجر بالكريمة", price: 2.75, category: "سناكات" },
-            { id: 89, name: "وجبة ستربس زنجر", price: 2.75, category: "سناكات" },
-            { id: 90, name: "وجبة فاهيتا", price: 2.50, category: "سناكات" },
-            { id: 91, name: "وجبة مكسيكي", price: 2.50, category: "سناكات" },
-            { id: 92, name: "وجبة شيش", price: 2.50, category: "سناكات" },
-            { id: 93, name: "وجبة ستيك دجاج", price: 2.75, category: "سناكات" },
-            { id: 94, name: "وجبة ستيك لحم", price: 3.00, category: "سناكات" },
-            { id: 95, name: "وجبة هوتدوج", price: 2.50, category: "سناكات" },
-            { id: 96, name: "وجبة زنقة (مع ببسي)", price: 3.00, category: "سناكات" },
-            { id: 97, name: "وجبة زنقة ايطالي (مع ببسي)", price: 3.50, category: "سناكات" },
+        right_frame = tk.Frame(self.root, width=400)
+        right_frame.pack(side=tk.RIGHT, fill=tk.BOTH, expand=True, padx=10, pady=10)
 
-            // بروستد وكرسبي
-            { id: 98, name: "نصف دجاجة بروستد (4 قطع)", price: 3.25, category: "بروستد وكرسبي" },
-            { id: 99, name: "دجاجة بروستد (8 قطع)", price: 6.50, category: "بروستد وكرسبي" },
-            { id: 100, name: "وجبة عائلية بروستد (12 قطعة + 2 كرسبي + ببسي 1 لتر)", price: 10.50, category: "بروستد وكرسبي" },
-            { id: 101, name: "وجبة العملاق بروستد (16 قطعة + 3 كرسبي + ببسي 2 لتر)", price: 14.00, category: "بروستد وكرسبي" },
-            { id: 102, name: "كرسبي 4 قطع", price: 2.75, category: "بروستد وكرسبي" },
-            { id: 103, name: "كرسبي 8 قطع", price: 5.00, category: "بروستد وكرسبي" },
-            { id: 104, name: "كرسبي 12 قطعة", price: 7.25, category: "بروستد وكرسبي" },
-            { id: 105, name: "كرسبي 16 قطعة", price: 9.50, category: "بروستد وكرسبي" },
+        # ----- الجزء الأيمن: قائمة المنتجات -----
+        tk.Label(right_frame, text="قائمة الوجبات والساندويشات", font=("Arial", 14, "bold")).pack(pady=5)
+        
+        self.product_listbox = tk.Listbox(right_frame, font=("Arial", 12))
+        self.product_listbox.pack(fill=tk.BOTH, expand=True, pady=5)
+        self.load_products()
 
-            // إضافات
-            { id: 106, name: "علبة طحينية", price: 0.50, category: "إضافات" },
-            { id: 107, name: "علبة مثومة", price: 0.50, category: "إضافات" },
-            { id: 108, name: "علبة خلطة", price: 0.50, category: "إضافات" },
-            { id: 109, name: "علبة سلطة", price: 0.50, category: "إضافات" },
-            { id: 110, name: "علبة مايونيز", price: 0.50, category: "إضافات" },
-            { id: 111, name: "علبة مخلل", price: 0.50, category: "إضافات" },
-            { id: 112, name: "علبة كول سلو", price: 0.50, category: "إضافات" },
-            { id: 113, name: "علبة صوص رايز", price: 1.00, category: "إضافات" },
-            { id: 114, name: "لبن منسف علبة", price: 0.50, category: "إضافات" },
-            { id: 115, name: "وجبة طالب صدر", price: 1.75, category: "إضافات" },
-            { id: 116, name: "وجبة طالب منسف صدر", price: 2.25, category: "إضافات" }
-        ];
+        btn_add = tk.Button(right_frame, text="إضافة للفاتورة", command=self.add_to_cart, bg="#2196F3", fg="white")
+        btn_add.pack(fill=tk.X, pady=5)
 
-        let cart = [];
-        let currentCategory = "شاورما"; // القسم الافتراضي
+        if self.role == "Admin":
+            btn_edit_price = tk.Button(right_frame, text="تعديل سعر المنتج (مدير)", command=self.edit_product_price, bg="#FF9800", fg="white")
+            btn_edit_price.pack(fill=tk.X, pady=2)
 
-        const categories = ["شاورما", "شاورما صاج", "وجبات ورز", "برجر", "سناكات", "بروستد وكرسبي", "إضافات"];
+        # ----- الجزء الأيسر: الفاتورة والحساب -----
+        tk.Label(left_frame, text="الفاتورة الحالية", font=("Arial", 14, "bold"), bg="#f0f0f0").pack(pady=5)
 
-        function renderCategories() {
-            const container = document.getElementById('categories-tabs');
-            container.innerHTML = categories.map(cat => `
-                <button onclick="selectCategory('${cat}')" class="category-tab ${cat === currentCategory ? 'active' : 'bg-white text-slate-700 border-slate-200'} px-5 py-2.5 rounded-xl text-sm font-bold border transition whitespace-nowrap">
-                    ${cat}
-                </button>
-            `).join('');
-        }
+        self.cart_tree = ttk.Treeview(left_frame, columns=("Name", "Price"), show="headings")
+        self.cart_tree.heading("Name", text="الصنف")
+        self.cart_tree.heading("Price", text="السعر")
+        self.cart_tree.pack(fill=tk.BOTH, expand=True, pady=5)
 
-        function selectCategory(cat) {
-            currentCategory = cat;
-            renderCategories();
-            renderProducts();
-        }
+        self.lbl_subtotal = tk.Label(left_frame, text="المجموع الأصلي: 0.00", font=("Arial", 11), bg="#f0f0f0")
+        self.lbl_subtotal.pack(anchor="w")
 
-        function renderProducts() {
-            const grid = document.getElementById('products-grid');
-            const filtered = products.filter(p => p.category === currentCategory);
-            
-            grid.innerHTML = filtered.map(p => `
-                <div onclick="addToCart(${p.id})" class="bg-white p-3 rounded-xl border border-slate-200 shadow-sm cursor-pointer hover:border-orange-500 hover:shadow-md transition flex flex-col justify-between">
-                    <h3 class="font-bold text-slate-800 text-sm leading-tight">${p.name}</h3>
-                    <p class="text-orange-600 font-extrabold text-base mt-2">${p.price.toFixed(2)} د.أ</p>
-                </div>
-            `).join('');
-        }
+        self.lbl_discount = tk.Label(left_frame, text="الخصم: 0.00", font=("Arial", 11), fg="red", bg="#f0f0f0")
+        self.lbl_discount.pack(anchor="w")
 
-        function addToCart(id) {
-            const p = products.find(prod => prod.id === id);
-            cart.push({
-                cartItemId: Date.now() + Math.random(),
-                id: p.id,
-                name: p.name,
-                price: p.price,
-                qty: 1,
-                note: ""
-            });
-            updateCart();
-        }
+        self.lbl_total = tk.Label(left_frame, text="الصافي النهائي: 0.00", font=("Arial", 14, "bold"), fg="green", bg="#f0f0f0")
+        self.lbl_total.pack(anchor="w", pady=5)
 
-        function changeQty(cartItemId, delta) {
-            const item = cart.find(i => i.cartItemId === cartItemId);
-            if (item) {
-                item.qty += delta;
-                if (item.qty <= 0) {
-                    deleteCartItem(cartItemId);
-                    return;
-                }
-            }
-            updateCart();
-        }
+        btn_discount = tk.Button(left_frame, text="إضافة خصم (يتطلب صلاحية)", command=self.apply_discount_auth, bg="#9C27B0", fg="white")
+        btn_discount.pack(fill=tk.X, pady=5)
 
-        function updateNote(cartItemId, noteText) {
-            const item = cart.find(i => i.cartItemId === cartItemId);
-            if (item) {
-                item.note = noteText;
-            }
-        }
+        btn_print = tk.Button(left_frame, text="طباعة الفاتورة وتأديد", command=self.print_receipt, bg="#4CAF50", fg="white", font=("Arial", 12, "bold"))
+        btn_print.pack(fill=tk.X, pady=10)
 
-        function deleteCartItem(cartItemId) {
-            cart = cart.filter(i => i.cartItemId !== cartItemId);
-            updateCart();
-        }
+    def load_products(self):
+        self.product_listbox.delete(0, tk.END)
+        conn = sqlite3.connect("pos_system.db")
+        cursor = conn.cursor()
+        cursor.execute("SELECT id, name, price FROM products")
+        self.products = cursor.fetchall()
+        conn.close()
+        
+        for p in self.products:
+            self.product_listbox.insert(tk.END, f"{p[1]} - {p[2]:.2f} دينار")
 
-        function clearCart() { cart = []; updateCart(); }
+    def add_to_cart(self):
+        selected = self.product_listbox.curselection()
+        if not selected:
+            messagebox.showwarning("تنبيه", "اختر منتجاً أولاً")
+            return
+        
+        product = self.products[selected[0]]
+        self.cart.append(product)
+        self.cart_tree.insert("", tk.END, values=(product[1], f"{product[2]:.2f}"))
+        self.update_totals()
 
-        function updateCart() {
-            const container = document.getElementById('cart-items');
-            if (cart.length === 0) {
-                container.innerHTML = `<div class="text-center py-8 text-slate-400 font-bold text-sm">السلة فارغة</div>`;
-            } else {
-                container.innerHTML = cart.map(i => `
-                    <div class="bg-slate-50 p-3 rounded-xl border border-slate-200 space-y-2">
-                        <div class="flex justify-between items-start">
-                            <div class="flex-1">
-                                <div class="font-bold text-sm text-slate-800">${i.name}</div>
-                                <div class="text-xs text-orange-600 font-bold">${i.price.toFixed(2)} د.أ</div>
-                            </div>
-                            <button onclick="deleteCartItem(${i.cartItemId})" title="حذف الصنف" class="text-red-500 hover:text-red-700 p-1 rounded">
-                                <i class="fa-solid fa-trash-can text-sm"></i>
-                            </button>
-                        </div>
+    def update_totals(self):
+        subtotal = sum(p[2] for p in self.cart)
+        total = max(0.0, subtotal - self.discount)
+        
+        self.lbl_subtotal.config(text=f"المجموع الأصلي: {subtotal:.2f}")
+        self.lbl_discount.config(text=f"الخصم: {self.discount:.2f}")
+        self.lbl_total.config(text=f"الصافي النهائي: {total:.2f}")
 
-                        <!-- إدخال التعديل والملاحظات -->
-                        <div>
-                            <input type="text" 
-                                value="${i.note}" 
-                                oninput="updateNote(${i.cartItemId}, this.value)" 
-                                placeholder="إضافة ملاحظة (شراك، حار، فرنسي...)" 
-                                class="w-full text-xs p-1.5 border border-slate-300 rounded bg-white focus:outline-none focus:border-orange-500" />
-                        </div>
+    def apply_discount_auth(self):
+        # إذا كان المستخدم أدمن يطبق الخصم فوراً، إذا كان كاشير يطلب باس الأدمن
+        if self.role == "Admin":
+            self.ask_discount_amount()
+        else:
+            self.verify_admin_pass(on_success=self.ask_discount_amount)
 
-                        <div class="flex justify-between items-center pt-1 border-t border-slate-200">
-                            <div class="flex items-center gap-2">
-                                <button onclick="changeQty(${i.cartItemId}, -1)" class="w-6 h-6 bg-slate-200 text-slate-700 rounded text-xs font-bold hover:bg-slate-300 flex items-center justify-center">-</button>
-                                <span class="font-bold text-sm text-slate-800">${i.qty}</span>
-                                <button onclick="changeQty(${i.cartItemId}, 1)" class="w-6 h-6 bg-orange-500 text-white rounded text-xs font-bold hover:bg-orange-600 flex items-center justify-center">+</button>
-                            </div>
-                            <span class="font-bold text-sm text-slate-900">${(i.price * i.qty).toFixed(2)} د.أ</span>
-                        </div>
-                    </div>
-                `).join('');
-            }
+    def verify_admin_pass(self, on_success):
+        win = tk.Toplevel(self.root)
+        win.title("تأكيد صلاحية المشرف")
+        win.geometry("300x150")
+        
+        tk.Label(win, text="أدخل كلمة سر المشرف لعمل الخصم:").pack(pady=10)
+        pass_entry = tk.Entry(win, show="*")
+        pass_entry.pack(pady=5)
 
-            const total = cart.reduce((sum, i) => sum + (i.price * i.qty), 0);
-            document.getElementById('total').innerText = total.toFixed(2) + ' د.أ';
-        }
+        def check():
+            conn = sqlite3.connect("pos_system.db")
+            cursor = conn.cursor()
+            cursor.execute("SELECT * FROM users WHERE role='Admin' AND password=?", (pass_entry.get(),))
+            admin = cursor.fetchone()
+            conn.close()
 
-        function processPayment() {
-            if (cart.length === 0) return alert('السلة فارغة!');
-            
-            document.getElementById('print-date').innerText = new Date().toLocaleString('ar-JO');
-            document.getElementById('print-items').innerHTML = cart.map(i => `
-                <tr style="border-bottom: 1px solid #eee;">
-                    <td style="padding: 4px 0; font-size:11px;">
-                        <div><strong>${i.name}</strong></div>
-                        ${i.note ? `<div style="font-size:10px; color:#555;">ملاحظات: (${i.note})</div>` : ''}
-                    </td>
-                    <td style="text-align: center; font-size:11px;">${i.qty}</td>
-                    <td style="text-align: left; font-size:11px;">${(i.price * i.qty).toFixed(2)}</td>
-                </tr>
-            `).join('');
+            if admin:
+                win.destroy()
+                on_success()
+            else:
+                messagebox.showerror("خطأ", "كلمة سر المشرف غير صحيحة!")
 
-            const total = cart.reduce((sum, i) => sum + (i.price * i.qty), 0);
-            document.getElementById('print-total').innerText = total.toFixed(2);
+        tk.Button(win, text="موافق", command=check, bg="#4CAF50", fg="white").pack(pady=10)
 
-            window.print();
-        }
+    def ask_discount_amount(self):
+        win = tk.Toplevel(self.root)
+        win.title("إدخال الخصم")
+        win.geometry("250x150")
 
-        renderCategories();
-        renderProducts();
-    </script>
-</body>
-</html>
+        tk.Label(win, text="قيمة الخصم:").pack(pady=10)
+        disc_entry = tk.Entry(win)
+        disc_entry.pack(pady=5)
+
+        def set_disc():
+            try:
+                self.discount = float(disc_entry.get())
+                self.update_totals()
+                win.destroy()
+            except ValueError:
+                messagebox.showerror("خطأ", "يرجى إدخال رقم صحيح")
+
+        tk.Button(win, text="تطبيق", command=set_disc).pack(pady=10)
+
+    def edit_product_price(self):
+        selected = self.product_listbox.curselection()
+        if not selected:
+            messagebox.showwarning("تنبيه", "اختر منتجاً لتعديل سعره")
+            return
+        
+        product = self.products[selected[0]]
+        
+        win = tk.Toplevel(self.root)
+        win.title("تعديل السعر")
+        win.geometry("250x150")
+
+        tk.Label(win, text=f"السعر الجديد لـ ({product[1]}):").pack(pady=10)
+        price_entry = tk.Entry(win)
+        price_entry.insert(0, str(product[2]))
+        price_entry.pack(pady=5)
+
+        def save_price():
+            try:
+                new_price = float(price_entry.get())
+                conn = sqlite3.connect("pos_system.db")
+                cursor = conn.cursor()
+                cursor.execute("UPDATE products SET price=? WHERE id=?", (new_price, product[0]))
+                conn.commit()
+                conn.close()
+                win.destroy()
+                self.load_products()
+            except ValueError:
+                messagebox.showerror("خطأ", "السعر غير صحيح")
+
+        tk.Button(win, text="حفظ", command=save_price).pack(pady=10)
+
+    def print_receipt(self):
+        if not self.cart:
+            messagebox.showwarning("تنبيه", "الفاتورة فارغة!")
+            return
+
+        subtotal = sum(p[2] for p in self.cart)
+        total = max(0.0, subtotal - self.discount)
+
+        # بناء نص الفاتورة للطباعة
+        receipt_text = "====== فاتورة المبيعات ======\n"
+        receipt_text += f"الكاشير: {self.username}\n"
+        receipt_text += "-----------------------------\n"
+        
+        for item in self.cart:
+            receipt_text += f"{item[1]} : {item[2]:.2f}\n"
+
+        receipt_text += "-----------------------------\n"
+        
+        if self.discount > 0:
+            # شطب السعر الأصلي وإظهار الخصم والسعر الجديد
+            receipt_text += f"السعر الأصلي: ~~ {subtotal:.2f} ~~\n"
+            receipt_text += f"خصم: -{self.discount:.2f}\n"
+            receipt_text += f"السعر الجديد: {total:.2f}\n"
+        else:
+            receipt_text += f"المجموع الكلي: {total:.2f}\n"
+
+        receipt_text += "=============================\n"
+        receipt_text += "   شكراً لزيارتكم!   \n"
+
+        # حفظ الفاتورة في ملف مؤقت وإرسالها للطابعة
+        temp_file = os.path.join(tempfile.gettempdir(), "receipt.txt")
+        with open(temp_file, "w", encoding="utf-8") as f:
+            f.write(receipt_text)
+
+        # إرسال لأمر الطباعة حسب نظام التشغيل
+        try:
+            if os.name == 'nt': # Windows
+                os.startfile(temp_file, "print")
+            else: # Linux/Mac
+                os.system(f"lpr {temp_file}")
+            messagebox.showinfo("نجاح", "تم إرسال الفاتورة للطابعة بنجاح.")
+        except Exception as e:
+            messagebox.showerror("خطأ طباعة", f"تعذر الطباعة: {e}")
+
+        # تفريغ السلة بعد الطباعة
+        self.cart.clear()
+        self.discount = 0.0
+        for item in self.cart_tree.get_children():
+            self.cart_tree.delete(item)
+        self.update_totals()
+
+# ================= 4. التشغيل الرئيسي =================
+if __name__ == "__main__":
+    init_db()
+    
+    def start_pos(username, role):
+        pos_root = tk.Tk()
+        POSSystem(pos_root, username, role)
+        pos_root.mainloop()
+
+    login_root = tk.Tk()
+    LoginWindow(login_root, start_pos)
+    login_root.mainloop()
 
