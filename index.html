@@ -29,18 +29,20 @@
             margin-bottom: 15px; 
             border: 1px solid var(--primary-orange);
             box-shadow: 0 4px 15px rgba(255, 115, 0, 0.2);
+            flex-wrap: wrap;
+            gap: 10px;
         }
 
-        .header-title { display: flex; align-items: center; gap: 10px; }
-        .header-title h1 { margin: 0; font-size: 24px; color: var(--primary-orange); }
-        .header-title span { font-size: 14px; color: #bbb; }
+        .header-title h1 { margin: 0; font-size: 22px; color: var(--primary-orange); }
+        .header-title span { font-size: 13px; color: #bbb; }
 
-        .container { display: flex; gap: 15px; height: calc(100vh - 110px); }
+        .header-actions { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+
+        .container { display: flex; gap: 15px; height: calc(100vh - 120px); }
         .panel { background: var(--panel-bg); border-radius: 12px; padding: 15px; border: 1px solid var(--border-color); }
         
         /* قسم الأصناف والتصنيفات */
         .products-panel { flex: 1.4; display: flex; flex-direction: column; gap: 10px; }
-        
         .categories-tabs { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 8px; border-bottom: 1px solid var(--border-color); }
         .tab-btn { 
             background: var(--card-bg); 
@@ -57,7 +59,7 @@
 
         .products-grid { 
             display: grid; 
-            grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); 
+            grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); 
             gap: 10px; 
             overflow-y: auto; 
             padding: 5px; 
@@ -66,12 +68,12 @@
         .product-card { 
             background: var(--card-bg); 
             border: 1px solid var(--border-color); 
-            padding: 12px 8px; 
+            padding: 10px 8px; 
             border-radius: 8px; 
             cursor: pointer; 
             text-align: center; 
             font-weight: bold; 
-            font-size: 14px; 
+            font-size: 13px; 
             color: var(--text-light); 
             transition: 0.2s; 
             display: flex;
@@ -80,7 +82,7 @@
             height: 85px;
         }
         .product-card:hover { border-color: var(--primary-orange); transform: translateY(-2px); }
-        .product-card span { color: var(--primary-orange); font-size: 15px; margin-top: 5px; }
+        .product-card span { color: var(--primary-orange); font-size: 14px; margin-top: 5px; }
 
         /* قسم الفاتورة */
         .cart-panel { flex: 1; display: flex; flex-direction: column; justify-content: space-between; }
@@ -88,7 +90,7 @@
         
         .cart-table { width: 100%; border-collapse: collapse; }
         .cart-table th, .cart-table td { border-bottom: 1px solid var(--border-color); padding: 8px; text-align: right; }
-        .cart-table th { color: var(--primary-orange); font-size: 14px; }
+        .cart-table th { color: var(--primary-orange); font-size: 13px; }
 
         .order-notes { margin: 8px 0; }
         .order-notes input { 
@@ -104,14 +106,23 @@
         .summary-box { background: var(--card-bg); border: 1px solid var(--border-color); padding: 12px; border-radius: 8px; }
         .summary-line { display: flex; justify-content: space-between; margin-bottom: 5px; font-size: 14px; }
         .old-price { text-decoration: line-through; color: #ef4444; }
-        .final-price { font-size: 20px; font-weight: bold; color: var(--primary-orange); border-top: 1px dashed var(--border-color); padding-top: 5px; margin-top: 5px; }
+        .final-price { font-size: 18px; font-weight: bold; color: var(--primary-orange); border-top: 1px dashed var(--border-color); padding-top: 5px; margin-top: 5px; }
 
-        .actions { display: flex; gap: 10px; margin-top: 10px; }
-        .btn { flex: 1; padding: 12px; border: none; border-radius: 6px; font-size: 15px; font-weight: bold; cursor: pointer; transition: 0.2s; }
-        .btn-discount { background: #8b5cf6; color: white; }
-        .btn-print { background: var(--primary-orange); color: #000; }
-        .btn-print:hover { background: var(--dark-orange); }
-        .btn-danger { background: #ef4444; color: white; width: 26px; height: 26px; padding: 0; border-radius: 4px; border: none; cursor: pointer; }
+        .actions { display: flex; gap: 8px; margin-top: 10px; }
+        .btn { padding: 10px 14px; border: none; border-radius: 6px; font-size: 14px; font-weight: bold; cursor: pointer; transition: 0.2s; }
+        .btn-orange { background: var(--primary-orange); color: #000; }
+        .btn-orange:hover { background: var(--dark-orange); }
+        .btn-purple { background: #8b5cf6; color: white; }
+        .btn-secondary { background: var(--card-bg); color: white; border: 1px solid var(--border-color); }
+        .btn-danger { background: #ef4444; color: white; width: 24px; height: 24px; padding: 0; border-radius: 4px; border: none; cursor: pointer; }
+
+        /* Popups / Modals */
+        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 1000; justify-content: center; align-items: center; }
+        .modal-content { background: var(--panel-bg); border: 1px solid var(--primary-orange); border-radius: 12px; padding: 20px; width: 90%; max-width: 450px; box-shadow: 0 5px 20px rgba(0,0,0,0.5); }
+        .modal-header { font-size: 18px; font-weight: bold; color: var(--primary-orange); margin-bottom: 15px; text-align: center; }
+        .form-group { margin-bottom: 12px; }
+        .form-group label { display: block; font-size: 13px; margin-bottom: 5px; }
+        .form-group input, .form-group select { width: 100%; padding: 10px; background: var(--card-bg); border: 1px solid var(--border-color); color: white; border-radius: 6px; }
 
         @media print {
             body * { visibility: hidden; }
@@ -126,11 +137,13 @@
 <header class="no-print">
     <div class="header-title">
         <h1>مطعم صاج رايز</h1>
-        <span>سر الحكاية - نظام POS</span>
+        <span>نظام POS وتتبع المبيعات</span>
     </div>
-    <div>
-        <span>المستخدم: <strong id="current-user" style="color:var(--primary-orange)">كاشير</strong> (<span id="user-role">صلاحيات محدودة</span>)</span>
-        <button onclick="switchUser()" style="margin-right: 10px; padding: 6px 12px; background: var(--card-bg); color: white; border: 1px solid var(--border-color); border-radius: 4px; cursor: pointer;">تغيير المستخدم</button>
+    <div class="header-actions">
+        <span>المستخدم: <strong id="current-user-name" style="color:var(--primary-orange)">-</strong> (<span id="user-role-label">-</span>)</span>
+        <button onclick="openLoginModal()" class="btn btn-secondary">تسجيل الدخول</button>
+        <button onclick="openPassModal()" class="btn btn-secondary">تغيير كلمة السر</button>
+        <button onclick="openReportsModal()" class="btn btn-purple">الجرد والتقارير</button>
     </div>
 </header>
 
@@ -173,8 +186,72 @@
         </div>
 
         <div class="actions">
-            <button class="btn btn-discount" onclick="handleDiscount()">خصم (Admin)</button>
-            <button class="btn btn-print" onclick="processOrder()">طباعة الفاتورة</button>
+            <button class="btn btn-purple" style="flex:1" onclick="applyDiscount()">خصم (Admin)</button>
+            <button class="btn btn-orange" style="flex:2" onclick="processOrder()">إنهاء وطباعة</button>
+        </div>
+    </div>
+</div>
+
+<!-- Modal: Login -->
+<div id="login-modal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">تسجيل الدخول إلى النظام</div>
+        <div class="form-group">
+            <label>اختر الحساب / الشفت</label>
+            <select id="login-email">
+                <option value="admin@sajrise.com">المدير العام (Admin)</option>
+                <option value="morning@sajrise.com">كاشير - شفت صباحي</option>
+                <option value="evening@sajrise.com">كاشير - شفت مسائي</option>
+            </select>
+        </div>
+        <div class="form-group">
+            <label>كلمة السر</label>
+            <input type="password" id="login-password" placeholder="أدخل كلمة السر">
+        </div>
+        <div style="display: flex; gap: 10px; margin-top: 15px;">
+            <button onclick="submitLogin()" class="btn btn-orange" style="flex:1">دخول</button>
+            <button onclick="closeModal('login-modal')" class="btn btn-secondary" style="flex:1">إلغاء</button>
+        </div>
+    </div>
+</div>
+
+<!-- Modal: Change Password -->
+<div id="pass-modal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">تغيير كلمة السر</div>
+        <div class="form-group">
+            <label>البريد الإلكتروني للحساب</label>
+            <input type="email" id="pass-email" readonly>
+        </div>
+        <div class="form-group">
+            <label>كلمة السر الحالية</label>
+            <input type="password" id="pass-old" placeholder="كلمة السر القديمة">
+        </div>
+        <div class="form-group">
+            <label>كلمة السر الجديدة</label>
+            <input type="password" id="pass-new" placeholder="كلمة السر الجديدة">
+        </div>
+        <div style="display: flex; gap: 10px; margin-top: 15px;">
+            <button onclick="submitChangePassword()" class="btn btn-orange" style="flex:1">حفظ</button>
+            <button onclick="closeModal('pass-modal')" class="btn btn-secondary" style="flex:1">إلغاء</button>
+        </div>
+    </div>
+</div>
+
+<!-- Modal: Reports & Monthly Inventory -->
+<div id="reports-modal" class="modal">
+    <div class="modal-content" style="max-width: 600px;">
+        <div class="modal-header">لوحة التقارير والجرد</div>
+        <div style="display: flex; gap: 10px; margin-bottom: 15px;">
+            <button onclick="showDailyReport()" class="btn btn-orange" style="flex:1">تقرير اليوم / الشفت الحالي</button>
+            <button onclick="showMonthlyReport()" class="btn btn-purple" style="flex:1">الجرد الشهري</button>
+        </div>
+        <div id="report-output" style="background: var(--card-bg); padding: 15px; border-radius: 8px; max-height: 250px; overflow-y: auto; font-size: 14px; line-height: 1.6;">
+            اختر نوع التقرير لعرض الإحصائيات...
+        </div>
+        <div style="display: flex; gap: 10px; margin-top: 15px;">
+            <button onclick="printReport()" class="btn btn-orange" style="flex:1">طباعة التقرير</button>
+            <button onclick="closeModal('reports-modal')" class="btn btn-secondary" style="flex:1">إغلاق</button>
         </div>
     </div>
 </div>
@@ -245,12 +322,29 @@
         ]
     };
 
+    // إعداد الحسابات الافتراضية
+    const defaultUsers = {
+        "admin@sajrise.com": { name: "المدير العام", role: "Admin", pass: "1234" },
+        "morning@sajrise.com": { name: "كاشير الصباحي", role: "Cashier", pass: "1111" },
+        "evening@sajrise.com": { name: "كاشير المسائي", role: "Cashier", pass: "2222" }
+    };
+
+    let users = JSON.parse(localStorage.getItem('sajrise_users')) || defaultUsers;
+    let currentUser = users["morning@sajrise.com"];
+    let currentUserEmail = "morning@sajrise.com";
+    let salesHistory = JSON.parse(localStorage.getItem('sajrise_sales')) || [];
+
     let cart = [];
     let discountAmount = 0;
-    let currentUser = { name: "كاشير", role: "Cashier" };
-    const ADMIN_PIN = "1234";
 
-    // إعداد أزرار التصنيفات
+    function saveUsers() { localStorage.setItem('sajrise_users', JSON.stringify(users)); }
+    function saveSales() { localStorage.setItem('sajrise_sales', JSON.stringify(salesHistory)); }
+
+    function updateHeaderUser() {
+        document.getElementById('current-user-name').innerText = currentUser.name;
+        document.getElementById('user-role-label').innerText = currentUser.role === "Admin" ? "مدير بالنظام" : "كاشير";
+    }
+
     function initCategories() {
         const tabsContainer = document.getElementById('categories-tabs');
         tabsContainer.innerHTML = '';
@@ -270,7 +364,6 @@
         }
     }
 
-    // عرض المنتجات بناءً على التصنيف
     function renderProducts(category) {
         const container = document.getElementById('products-list');
         container.innerHTML = '';
@@ -311,7 +404,6 @@
         });
 
         let total = Math.max(0, subtotal - discountAmount);
-
         const subtotalEl = document.getElementById('subtotal-val');
         subtotalEl.innerText = subtotal.toFixed(2);
         
@@ -327,34 +419,16 @@
         document.getElementById('total-val').innerText = total.toFixed(2) + " د.أ";
     }
 
-    function handleDiscount() {
-        if (currentUser.role === "Cashier") {
-            let pin = prompt("أدخل كلمة سر المشرف لعمل الخصم:");
-            if (pin !== ADMIN_PIN) {
-                alert("كلمة السر خاطئة!");
-                return;
-            }
+    function applyDiscount() {
+        if (currentUser.role !== "Admin") {
+            alert("عذراً، الخصم مسموح به لحساب المدير فقط!");
+            return;
         }
-        
         let val = parseFloat(prompt("أدخل قيمة الخصم (بالدينار):"));
         if (!isNaN(val) && val >= 0) {
             discountAmount = val;
             updateCartUI();
         }
-    }
-
-    function switchUser() {
-        let pin = prompt("أدخل كلمة السر (1234 للمدير / 1111 للكاشير):");
-        if (pin === "1234") {
-            currentUser = { name: "المدير", role: "Admin" };
-        } else if (pin === "1111") {
-            currentUser = { name: "كاشير 1", role: "Cashier" };
-        } else {
-            alert("كلمة السر غير صحيحة!");
-            return;
-        }
-        document.getElementById('current-user').innerText = currentUser.name;
-        document.getElementById('user-role').innerText = currentUser.role === "Admin" ? "مدير بالنظام" : "صلاحيات محدودة";
     }
 
     function processOrder() {
@@ -366,6 +440,19 @@
         let subtotal = cart.reduce((a, b) => a + b.price, 0);
         let total = Math.max(0, subtotal - discountAmount);
         let note = document.getElementById('order-note-input').value.trim();
+        let timestamp = new Date().toISOString();
+
+        // تسجيل الطلب في التخزين اليومي/الشهري
+        salesHistory.push({
+            id: Date.now(),
+            date: timestamp,
+            cashier: currentUser.name,
+            items: [...cart],
+            subtotal,
+            discount: discountAmount,
+            total
+        });
+        saveSales();
 
         let printHTML = `
             <div style="text-align: center; width: 100%;">
@@ -389,8 +476,6 @@
             printHTML += `<div style="font-size: 11px; margin-bottom: 8px;"><strong>ملاحظات:</strong> ${note}</div><p>--------------------------------</p>`;
         }
 
-        printHTML += `<div style="font-size: 13px;">`;
-
         if (discountAmount > 0) {
             printHTML += `
                 <div>المجموع الأصلي: <span style="text-decoration: line-through;">${subtotal.toFixed(2)}</span></div>
@@ -401,7 +486,7 @@
             printHTML += `<div style="font-weight: bold; font-size: 15px;">المجموع الكلي: ${total.toFixed(2)} د.أ</div>`;
         }
 
-        printHTML += `</div><p style="text-align: center; margin-top: 15px;">شكراً لزيارتكم - صاج رايز</p>`;
+        printHTML += `<p style="text-align: center; margin-top: 15px;">شكراً لزيارتكم - صاج رايز</p>`;
 
         const receiptContainer = document.getElementById('receipt-print');
         receiptContainer.innerHTML = printHTML;
@@ -416,6 +501,98 @@
         updateCartUI();
     }
 
+    /* Modal Controls & Auth Logic */
+    function openModal(id) { document.getElementById(id).style.display = 'flex'; }
+    function closeModal(id) { document.getElementById(id).style.display = 'none'; }
+
+    function openLoginModal() { openModal('login-modal'); }
+    function submitLogin() {
+        let email = document.getElementById('login-email').value;
+        let pass = document.getElementById('login-password').value;
+
+        if (users[email] && users[email].pass === pass) {
+            currentUser = users[email];
+            currentUserEmail = email;
+            updateHeaderUser();
+            closeModal('login-modal');
+            document.getElementById('login-password').value = '';
+        } else {
+            alert("كلمة السر غير صحيحة!");
+        }
+    }
+
+    function openPassModal() {
+        document.getElementById('pass-email').value = currentUserEmail;
+        openModal('pass-modal');
+    }
+
+    function submitChangePassword() {
+        let oldPass = document.getElementById('pass-old').value;
+        let newPass = document.getElementById('pass-new').value;
+
+        if (currentUser.pass !== oldPass) {
+            alert("كلمة السر الحالية غير صحيحة!");
+            return;
+        }
+
+        if (!newPass) {
+            alert("يرجى أدخل كلمة سر جديدة صحيحة!");
+            return;
+        }
+
+        users[currentUserEmail].pass = newPass;
+        saveUsers();
+        alert("تم تغيير كلمة السر بنجاح!");
+        closeModal('pass-modal');
+        document.getElementById('pass-old').value = '';
+        document.getElementById('pass-new').value = '';
+    }
+
+    function openReportsModal() { openModal('reports-modal'); }
+
+    function showDailyReport() {
+        let todayStr = new Date().toISOString().split('T')[0];
+        let todaySales = salesHistory.filter(s => s.date.startsWith(todayStr));
+        
+        let totalSum = todaySales.reduce((acc, curr) => acc + curr.total, 0);
+        let count = todaySales.length;
+
+        let html = `<strong>تقرير مبيعات اليوم (${todayStr}):</strong><br>`;
+        html += `عدد الطلبات: <strong>${count}</strong><br>`;
+        html += `إجمالي مبيعات اليوم: <strong style="color:var(--primary-orange)">${totalSum.toFixed(2)} د.أ</strong><hr>`;
+        
+        todaySales.forEach((s, i) => {
+            html += `<small>#${i+1} [${s.cashier}] - الصافي: ${s.total.toFixed(2)} د.أ</small><br>`;
+        });
+
+        document.getElementById('report-output').innerHTML = html;
+    }
+
+    function showMonthlyReport() {
+        let currentMonth = new Date().toISOString().slice(0, 7); // YYYY-MM
+        let monthSales = salesHistory.filter(s => s.date.startsWith(currentMonth));
+
+        let totalSum = monthSales.reduce((acc, curr) => acc + curr.total, 0);
+        let count = monthSales.length;
+
+        let html = `<strong>الجرد الشهري (${currentMonth}):</strong><br>`;
+        html += `إجمالي الطلبات خلال الشهر: <strong>${count}</strong><br>`;
+        html += `إجمالي الدخل المالي الشهر: <strong style="color:var(--primary-orange)">${totalSum.toFixed(2)} د.أ</strong>`;
+
+        document.getElementById('report-output').innerHTML = html;
+    }
+
+    function printReport() {
+        let reportContent = document.getElementById('report-output').innerHTML;
+        const receiptContainer = document.getElementById('receipt-print');
+        receiptContainer.innerHTML = `<div style="padding:10px;"><h3>تقرير صاج رايز</h3>${reportContent}</div>`;
+        receiptContainer.style.display = 'block';
+        window.print();
+        receiptContainer.style.display = 'none';
+    }
+
+    // Init App
+    updateHeaderUser();
     initCategories();
 </script>
 
