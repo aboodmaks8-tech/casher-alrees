@@ -163,7 +163,7 @@
         <div>
             <!-- Add New Custom Item Box -->
             <div class="add-item-box">
-                <h5 style="margin:0 0 8px 0; color:var(--primary-orange);">➕ إضافة صنف جديد القائمة</h5>
+                <h5 style="margin:0 0 8px 0; color:var(--primary-orange);">➕ إضافة صنف جديد للقائمة</h5>
                 <div style="display:flex; gap:8px;">
                     <input type="text" id="new-item-name" placeholder="اسم الصنف الجديد..." style="margin:0; font-size:12px;">
                     <input type="number" id="new-item-price" placeholder="السعر (د.أ)" step="0.1" style="margin:0; font-size:12px; width:100px;">
@@ -252,7 +252,7 @@
         if (giftCodes[input]) {
             applySubscriptionDays(giftCodes[input]);
             msg.style.color = "#10b981";
-            msg.innerText = "تم التفعيل بنجاح! جاري تحويلك لكاشير الريس...";
+            msg.innerText = "تم التفعيل بنجاح! جاري تحويلك للكاشير...";
             setTimeout(openPOSView, 1000);
         } else {
             msg.style.color = "#ef4444";
@@ -262,7 +262,7 @@
 
     function checkAndLaunchPOS() {
         if (isSubscribed()) openPOSView();
-        else alert("اشتراكك غير فعال! يرجى التفعيل بكود الهدية أولاً.");
+        else alert("اشتراكك غير فعال! يرجى أدخل كود التفعيل أولاً.");
     }
 
     function openPOSView() {
@@ -362,4 +362,3 @@
 
 </body>
 </html>
-
