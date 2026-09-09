@@ -44,7 +44,6 @@
         .btn-blue { background: var(--blue-accent); color: #fff; }
 
         .hero { padding: 40px 20px; text-align: center; background: radial-gradient(circle at center, rgba(255, 115, 0, 0.15) 0%, transparent 70%); }
-        .promo-badge { background: rgba(255, 115, 0, 0.2); border: 1px solid var(--primary-orange); color: var(--primary-orange); padding: 6px 14px; border-radius: 20px; font-size: 12px; font-weight: bold; display: inline-block; margin-bottom: 15px; }
 
         .section-title { text-align: center; margin: 30px 0 15px 0; font-size: 20px; color: var(--primary-orange); }
 
@@ -61,11 +60,17 @@
         #pos-view { display: none; padding: 15px; max-width: 1200px; margin: 0 auto; }
         .pos-header { display: flex; justify-content: space-between; align-items: center; background: var(--panel-bg); padding: 12px 20px; border-radius: 10px; border: 1px solid var(--border-color); margin-bottom: 15px; }
         .pos-main-grid { display: grid; grid-template-columns: 2fr 1fr; gap: 15px; }
+        
+        /* Category Tabs */
+        .category-tabs { display: flex; gap: 8px; overflow-x: auto; margin-bottom: 12px; padding-bottom: 5px; }
+        .tab-btn { background: var(--card-bg); border: 1px solid var(--border-color); color: #fff; padding: 8px 16px; border-radius: 8px; cursor: pointer; white-space: nowrap; font-size: 12px; font-weight: bold; }
+        .tab-btn.active { background: var(--primary-orange); color: #000; border-color: var(--primary-orange); }
+
         .menu-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 10px; margin-bottom: 15px; }
         .item-card { background: var(--card-bg); border: 1px solid var(--border-color); padding: 12px; border-radius: 8px; text-align: center; cursor: pointer; }
         .item-card:hover { border-color: var(--primary-orange); }
 
-        .add-item-box { background: var(--panel-bg); border: 1px solid var(--border-color); padding: 15px; border-radius: 10px; margin-bottom: 15px; }
+        .management-box { background: var(--panel-bg); border: 1px solid var(--border-color); padding: 15px; border-radius: 10px; margin-bottom: 15px; }
 
         .cart-panel { background: var(--panel-bg); border: 1px solid var(--border-color); border-radius: 10px; padding: 15px; display: flex; flex-direction: column; }
         .cart-item { display: flex; flex-direction: column; background: var(--card-bg); border: 1px solid var(--border-color); padding: 8px; border-radius: 6px; margin-bottom: 8px; }
@@ -81,7 +86,7 @@
 <body>
 
 <nav>
-    <div class="logo">🍔 نظام كاشير الريس المتكامل</div>
+    <div class="logo">🌸 نظام كاشير الريس المتكامل</div>
     <div class="nav-links">
         <a href="#pricing">الاشتراكات</a>
         <a href="#payment">طرق الدفع</a>
@@ -92,9 +97,8 @@
 <!-- Landing View -->
 <div id="landing-view">
     <section class="hero">
-        <div class="promo-badge">🎉 تجربة مجانية 7 أيام بكود: FREE7DAYS</div>
         <h1 style="margin:0 0 10px 0;">اشتراكات نظام كاشير الريس المتكامل</h1>
-        <p style="color:#aaa; font-size:14px;">إدارة الشفتات، إضافة الخيارات، تقارير المبيعات اليومية، تعليق الطلبات والطباعة.</p>
+        <p style="color:#aaa; font-size:14px;">إدارة الأقسام، الخيارات المخصصة، تقارير المبيعات اليومية، والطباعة.</p>
     </section>
 
     <section id="pricing">
@@ -140,7 +144,7 @@
 
         <div class="redeem-box">
             <h3 style="color:var(--primary-orange); margin-top:0;">تفعيل الكود والدخول</h3>
-            <p style="font-size:12px; color:#aaa;">أدخل كود الاشتراك أو الهدية للدخول فوراً:</p>
+            <p style="font-size:12px; color:#aaa;">أدخل كود الاشتراك المعتمد للدخول:</p>
             <input type="text" id="gift-code-input" class="code-input" placeholder="أدخل الكود هنا...">
             <button onclick="redeemCode()" class="btn btn-orange" style="width: 100%;">تفعيل والدخول للكاشير 🚀</button>
             <div id="status-msg" style="margin-top:10px; font-size:12px;"></div>
@@ -152,7 +156,7 @@
 <div id="pos-view">
     <div class="pos-header">
         <div>
-            <h3 style="margin:0; color:var(--primary-orange);">نظام كاشير الريس المتطور</h3>
+            <h3 style="margin:0; color:var(--primary-orange);">🌸 نظام كاشير الريس المتطور</h3>
             <span id="sub-status" style="font-size:11px; color:#10b981;">الحساب نشط</span>
         </div>
         <div style="display:flex; gap:10px; align-items:center;">
@@ -172,40 +176,30 @@
     </div>
 
     <div class="pos-main-grid">
-        <!-- Menu Section & Add Options Controls -->
+        <!-- Menu Section & Controls -->
         <div>
-            <div class="add-item-box">
-                <h5 style="margin:0 0 8px 0; color:var(--primary-orange);">➕ إضافة صنف جديد للقائمة</h5>
+            <!-- Add Section & Add Item Controls -->
+            <div class="management-box">
+                <h5 style="margin:0 0 8px 0; color:var(--primary-orange);">📁 إضافة قسم جديد</h5>
+                <div style="display:flex; gap:8px; margin-bottom:12px;">
+                    <input type="text" id="new-category-name" placeholder="اسم القسم الجديد (مثال: سناكات)..." style="margin:0; font-size:12px;">
+                    <button onclick="addNewCategory()" class="btn btn-blue" style="padding:6px 12px; font-size:12px; white-space:nowrap;">إضافة قسم</button>
+                </div>
+
+                <h5 style="margin:0 0 8px 0; color:var(--primary-orange);">➕ إضافة صنف جديد لقسم</h5>
                 <div style="display:flex; gap:8px;">
-                    <input type="text" id="new-item-name" placeholder="اسم الصنف الجديد..." style="margin:0; font-size:12px;">
-                    <input type="number" id="new-item-price" placeholder="السعر (د.أ)" step="0.1" style="margin:0; font-size:12px; width:100px;">
-                    <button onclick="addNewCustomMenuItem()" class="btn btn-orange" style="padding:6px 12px; font-size:12px; white-space:nowrap;">إضافة</button>
+                    <input type="text" id="new-item-name" placeholder="اسم الصنف (مثال: زنجر)..." style="margin:0; font-size:12px;">
+                    <input type="number" id="new-item-price" placeholder="السعر" step="0.1" style="margin:0; font-size:12px; width:80px;">
+                    <select id="item-category-select" style="margin:0; font-size:12px; width:110px;"></select>
+                    <button onclick="addNewCustomMenuItem()" class="btn btn-orange" style="padding:6px 12px; font-size:12px; white-space:nowrap;">إضافة صنف</button>
                 </div>
             </div>
 
-            <h4 style="color:#aaa; margin:0 0 10px 0;">قائمة الأصناف</h4>
-            <div class="menu-grid" id="menu-grid-container">
-                <div class="item-card" onclick="addToCart('وجبة صاج دجاج', 2.500)">
-                    <h5 style="margin:5px 0;">وجبة صاج دجاج</h5>
-                    <span style="color:var(--primary-orange); font-size:12px;">2.500 د.أ</span>
-                </div>
-                <div class="item-card" onclick="addToCart('وجبة صاج لحم', 3.000)">
-                    <h5 style="margin:5px 0;">وجبة صاج لحم</h5>
-                    <span style="color:var(--primary-orange); font-size:12px;">3.000 د.أ</span>
-                </div>
-                <div class="item-card" onclick="addToCart('سندويش صاج', 1.500)">
-                    <h5 style="margin:5px 0;">سندويش صاج</h5>
-                    <span style="color:var(--primary-orange); font-size:12px;">1.500 د.أ</span>
-                </div>
-                <div class="item-card" onclick="addToCart('بطاطا مقلية', 1.000)">
-                    <h5 style="margin:5px 0;">بطاطا مقلية</h5>
-                    <span style="color:var(--primary-orange); font-size:12px;">1.000 د.أ</span>
-                </div>
-                <div class="item-card" onclick="addToCart('مشروب غازي', 0.500)">
-                    <h5 style="margin:5px 0;">مشروب غازي</h5>
-                    <span style="color:var(--primary-orange); font-size:12px;">0.500 د.أ</span>
-                </div>
-            </div>
+            <!-- Categories Tabs -->
+            <div class="category-tabs" id="category-tabs-container"></div>
+
+            <!-- Items Display Grid -->
+            <div class="menu-grid" id="menu-grid-container"></div>
         </div>
 
         <!-- Cart Panel Section -->
@@ -247,7 +241,19 @@
 <footer>جميع الحقوق محفوظة © نظام كاشير الريس المتكامل</footer>
 
 <script>
-    const giftCodes = { "FREE7DAYS": 7, "GIFT7DAYS": 7, "ALREES30": 30, "ALREES365": 365 };
+    const giftCodes = { "ALREES30": 30, "ALREES365": 365 };
+    
+    let categories = ["وجبات", "سناكات", "مشروبات"];
+    let activeCategory = "وجبات";
+    
+    let menuItems = [
+        { id: 1, name: "وجبة صاج دجاج", price: 2.500, category: "وجبات" },
+        { id: 2, name: "وجبة صاج لحم", price: 3.000, category: "وجبات" },
+        { id: 3, name: "زنجر سوبريم", price: 2.200, category: "سناكات" },
+        { id: 4, name: "بطاطا مقلية", price: 1.000, category: "سناكات" },
+        { id: 5, name: "مشروب غازي", price: 0.500, category: "مشروبات" }
+    ];
+
     let cart = [];
     let totalSales = 0;
     let invoiceCount = 0;
@@ -286,13 +292,16 @@
 
     function checkAndLaunchPOS() {
         if (isSubscribed()) openPOSView();
-        else alert("اشتراكك غير فعال! يرجى أدخل كود التفعيل أولاً.");
+        else alert("اشتراكك غير فعال! يرجى إدخال كود التفعيل أولاً.");
     }
 
     function openPOSView() {
         document.getElementById('landing-view').style.display = 'none';
         document.getElementById('pos-view').style.display = 'block';
         document.getElementById('sub-status').innerText = `الحساب نشط (المتبقي: ${getRemainingDays()} يوم)`;
+        renderCategoryTabs();
+        renderMenuGrid();
+        updateCategoryDropdown();
     }
 
     function exitPOS() {
@@ -300,24 +309,82 @@
         document.getElementById('landing-view').style.display = 'block';
     }
 
+    function renderCategoryTabs() {
+        let container = document.getElementById('category-tabs-container');
+        container.innerHTML = '';
+        categories.forEach(cat => {
+            let btn = document.createElement('button');
+            btn.className = `tab-btn ${cat === activeCategory ? 'active' : ''}`;
+            btn.innerText = cat;
+            btn.onclick = () => {
+                activeCategory = cat;
+                renderCategoryTabs();
+                renderMenuGrid();
+            };
+            container.appendChild(btn);
+        });
+    }
+
+    function updateCategoryDropdown() {
+        let select = document.getElementById('item-category-select');
+        select.innerHTML = '';
+        categories.forEach(cat => {
+            let opt = document.createElement('option');
+            opt.value = cat;
+            opt.innerText = cat;
+            select.appendChild(opt);
+        });
+    }
+
+    function addNewCategory() {
+        let name = document.getElementById('new-category-name').value.trim();
+        if (!name) return alert("يرجى كتابة اسم القسم!");
+        if (categories.includes(name)) return alert("القسم موجود بالفعّل!");
+
+        categories.push(name);
+        activeCategory = name;
+        document.getElementById('new-category-name').value = '';
+        renderCategoryTabs();
+        updateCategoryDropdown();
+        renderMenuGrid();
+    }
+
     function addNewCustomMenuItem() {
         let name = document.getElementById('new-item-name').value.trim();
         let price = parseFloat(document.getElementById('new-item-price').value);
+        let category = document.getElementById('item-category-select').value;
 
         if (!name || isNaN(price)) {
             alert("يرجى إدخال اسم الصنف والسعر بشكل صحيح!");
             return;
         }
 
-        let container = document.getElementById('menu-grid-container');
-        let div = document.createElement('div');
-        div.className = 'item-card';
-        div.onclick = function() { addToCart(name, price); };
-        div.innerHTML = `<h5 style="margin:5px 0;">${name}</h5><span style="color:var(--primary-orange); font-size:12px;">${price.toFixed(3)} د.أ</span>`;
-        container.appendChild(div);
-
+        menuItems.push({ id: Date.now(), name, price, category });
         document.getElementById('new-item-name').value = '';
         document.getElementById('new-item-price').value = '';
+
+        activeCategory = category;
+        renderCategoryTabs();
+        renderMenuGrid();
+    }
+
+    function renderMenuGrid() {
+        let container = document.getElementById('menu-grid-container');
+        container.innerHTML = '';
+
+        let filteredItems = menuItems.filter(item => item.category === activeCategory);
+        if (filteredItems.length === 0) {
+            container.innerHTML = '<p style="color:#666; font-size:12px; grid-column:1/-1;">لا يوجد أصناف في هذا القسم</p>';
+            return;
+        }
+
+        filteredItems.forEach(item => {
+            let div = document.createElement('div');
+            div.className = 'item-card';
+            div.onclick = () => addToCart(item.name, item.price);
+            div.innerHTML = `<h5 style="margin:5px 0;">${item.name}</h5><span style="color:var(--primary-orange); font-size:12px;">${item.price.toFixed(3)} د.أ</span>`;
+            container.appendChild(div);
+        });
     }
 
     function addToCart(name, price) {
