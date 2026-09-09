@@ -58,7 +58,6 @@
         .hero h1 { font-size: 32px; margin-bottom: 15px; color: #fff; }
         .hero p { font-size: 15px; color: #aaa; max-width: 600px; margin: 0 auto 25px auto; line-height: 1.6; }
 
-        .cta-btns { display: flex; justify-content: center; gap: 12px; flex-wrap: wrap; }
         .btn { padding: 12px 24px; border-radius: 8px; border: none; font-weight: bold; cursor: pointer; text-decoration: none; font-size: 14px; transition: 0.2s; }
         .btn-orange { background: var(--primary-orange); color: #000; }
         .btn-orange:hover { background: var(--dark-orange); }
@@ -67,7 +66,6 @@
 
         .section-title { text-align: center; margin: 40px 0 20px 0; font-size: 22px; color: var(--primary-orange); }
 
-        /* Pricing Section */
         .pricing-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
@@ -94,7 +92,6 @@
         .price-features li { margin-bottom: 10px; display: flex; align-items: center; gap: 8px; }
         .price-features li::before { content: "✓"; color: var(--green-accent); font-weight: bold; }
 
-        /* Payment Methods Section */
         .payment-methods-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
@@ -114,7 +111,6 @@
         .payment-card h4 { margin: 0 0 8px 0; color: var(--primary-orange); font-size: 16px; }
         .payment-card p { margin: 0; font-size: 13px; color: #ccc; direction: ltr; font-weight: bold; }
 
-        /* Contact & Redeem Section */
         .box-wrapper {
             max-width: 900px;
             margin: 30px auto;
@@ -148,6 +144,58 @@
             font-weight: bold;
         }
 
+        /* واجهة الكاشير التفاعلية (POS Interface) */
+        #pos-view {
+            display: none;
+            padding: 20px;
+            max-width: 1100px;
+            margin: 0 auto;
+        }
+
+        .pos-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: var(--panel-bg);
+            padding: 15px 20px;
+            border-radius: 12px;
+            border: 1px solid var(--border-color);
+            margin-bottom: 20px;
+        }
+
+        .pos-grid {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 20px;
+        }
+
+        .menu-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+            gap: 15px;
+        }
+
+        .item-card {
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            padding: 15px;
+            border-radius: 10px;
+            text-align: center;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+        .item-card:hover { border-color: var(--primary-orange); transform: translateY(-2px); }
+
+        .cart-panel {
+            background: var(--panel-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+
         footer { text-align: center; padding: 25px; border-top: 1px solid var(--border-color); margin-top: 40px; font-size: 12px; color: #666; }
     </style>
 </head>
@@ -159,81 +207,132 @@
         <a href="#pricing">الاشتراكات</a>
         <a href="#payment">طرق الدفع</a>
         <a href="#contact">الدعم والاتصال</a>
+        <button onclick="checkAndLaunchPOS()" class="btn btn-orange" style="padding: 6px 14px; font-size: 12px;">دخول الكاشير ←</button>
     </div>
 </nav>
 
-<section class="hero">
-    <div class="promo-badge">🎉 تجربة مجانية 7 أيام بكود: FREE7DAYS</div>
-    <h1>اشتراكات نظام كاشير الريس</h1>
-    <p>يمكنك حجز اشتراكك الشهري أو السنوي بسهولة من خلال عدة طرق دفع محلية وسريعة.</p>
-</section>
+<!-- Landing Page View -->
+<div id="landing-view">
+    <section class="hero">
+        <div class="promo-badge">🎉 تجربة مجانية 7 أيام بكود: FREE7DAYS</div>
+        <h1>اشتراكات نظام كاشير الريس</h1>
+        <p>يمكنك حجز اشتراكك الشهري أو السنوي بسهولة من خلال عدة طرق دفع محلية وسريعة.</p>
+    </section>
 
-<!-- Pricing -->
-<section id="pricing">
-    <h2 class="section-title">خطط الاشتراكات</h2>
-    <div class="pricing-grid">
-        <div class="pricing-card">
-            <h3>الاشتراك الشهري</h3>
-            <div class="price">50 <span>د.أ / شهرياً</span></div>
-            <ul class="price-features">
-                <li>دخول كامل للنظام</li>
-                <li>تحديثات سريعة ومستمرة</li>
-                <li>دعم فني متواصل</li>
+    <!-- Pricing -->
+    <section id="pricing">
+        <h2 class="section-title">خطط الاشتراكات</h2>
+        <div class="pricing-grid">
+            <div class="pricing-card">
+                <h3>الاشتراك الشهري</h3>
+                <div class="price">50 <span>د.أ / شهرياً</span></div>
+                <ul class="price-features">
+                    <li>دخول كامل للنظام</li>
+                    <li>تحديثات سريعة ومستمرة</li>
+                    <li>دعم فني متواصل</li>
+                </ul>
+                <a href="#payment" class="btn btn-outline" style="display:block;">اختر طريقة الدفع</a>
+            </div>
+            <div class="pricing-card popular">
+                <h3>الاشتراك السنوي</h3>
+                <div class="price">400 <span>د.أ / سنوياً</span></div>
+                <ul class="price-features">
+                    <li>توفير بقيمة 200 دينار</li>
+                    <li>جميع مميزات الخطة الشهرية</li>
+                    <li>تدريب الكادر مجاناً</li>
+                </ul>
+                <a href="#payment" class="btn btn-orange" style="display:block;">اختر طريقة الدفع</a>
+            </div>
+        </div>
+    </section>
+
+    <!-- Payment Methods Section -->
+    <section id="payment">
+        <h2 class="section-title">طرق الدفع المتاحة</h2>
+        <div class="payment-methods-grid">
+            <div class="payment-card">
+                <h4>📱 زين كاش (Zain Cash)</h4>
+                <p>0791371566</p>
+                <span style="font-size:11px; color:#888;">حول المبلغ ثم أرسل إشعار التحويل</span>
+            </div>
+            <div class="payment-card">
+                <h4>🏦 كليك (CliQ)</h4>
+                <p>ALREES / 0791371566</p>
+                <span style="font-size:11px; color:#888;">تفعيل مباشر عبر الاسم أو الرقم</span>
+            </div>
+            <div class="payment-card">
+                <h4>📞 الدفع المباشر / كاش</h4>
+                <p>0791371566</p>
+                <span style="font-size:11px; color:#888;">التواصل المباشر مع المدير (الريس)</span>
+            </div>
+        </div>
+    </section>
+
+    <!-- Contact & Gift Redeem -->
+    <div class="box-wrapper" id="contact">
+        <div class="support-box">
+            <h3 style="color:var(--primary-orange); margin-top:0;">إرسال إثبات الدفع والتفعيل</h3>
+            <p style="font-size:13px; color:#aaa;">بعد إتمام التحويل، أرسل الصورة عبر الواتساب لتسلم كود التفعيل المباشر:</p>
+            <div class="contact-links">
+                <a href="https://wa.me/962791371566" target="_blank" class="btn-whatsapp">إرسال الإثبات عبر الواتساب</a>
+                <a href="tel:0791371566" class="btn-call">اتصال مباشر</a>
+            </div>
+        </div>
+
+        <div class="redeem-box">
+            <h3 style="color:var(--primary-orange); margin-top:0;">تفعيل الكود والدخول</h3>
+            <p style="font-size:12px; color:#aaa;">أدخل كود الاشتراك أو الهدية للانتقال للكاشير فوراً:</p>
+            <input type="text" id="gift-code-input" class="code-input" placeholder="أدخل الكود هنا...">
+            <button onclick="redeemCode()" class="btn btn-orange" style="width: 100%;">تفعيل والدخول للكاشير 🚀</button>
+            <div id="status-msg" style="margin-top:10px; font-size:12px;"></div>
+        </div>
+    </div>
+</div>
+
+<!-- POS View (واجهة الكاشير) -->
+<div id="pos-view">
+    <div class="pos-header">
+        <div>
+            <h2 style="margin:0; color:var(--primary-orange);">نظام كاشير الريس - شاشة المبيعات</h2>
+            <span id="sub-status" style="font-size:12px; color:#10b981;">الحساب نشط</span>
+        </div>
+        <button onclick="exitPOS()" class="btn btn-outline" style="font-size:12px;">خروج للصفحة الرئيسية</button>
+    </div>
+
+    <div class="pos-grid">
+        <div class="menu-grid">
+            <div class="item-card" onclick="addToCart('وجبة صاج دجاج', 2.500)">
+                <h4>وجبة صاج دجاج</h4>
+                <p style="color:var(--primary-orange);">2.500 د.أ</p>
+            </div>
+            <div class="item-card" onclick="addToCart('وجبة صاج لحم', 3.000)">
+                <h4>وجبة صاج لحم</h4>
+                <p style="color:var(--primary-orange);">3.000 د.أ</p>
+            </div>
+            <div class="item-card" onclick="addToCart('سندويش صاج', 1.500)">
+                <h4>سندويش صاج</h4>
+                <p style="color:var(--primary-orange);">1.500 د.أ</p>
+            </div>
+            <div class="item-card" onclick="addToCart('مشروب غازي', 0.500)">
+                <h4>مشروب غازي</h4>
+                <p style="color:var(--primary-orange);">0.500 د.أ</p>
+            </div>
+        </div>
+
+        <div class="cart-panel">
+            <h3>فاتورة الطلب</h3>
+            <ul id="cart-items" style="list-style:none; padding:0; font-size:14px; flex-grow:1;">
+                <li style="color:#666;">لم يتم إضافة عناصر بعد...</li>
             </ul>
-            <a href="#payment" class="btn btn-outline" style="display:block;">اختر طريقة الدفع</a>
+            <div>
+                <hr style="border-color:var(--border-color);">
+                <div style="display:flex; justify-style:space-between; font-weight:bold; font-size:18px; margin-bottom:15px;">
+                    <span>المجموع:</span>
+                    <span id="cart-total">0.000 د.أ</span>
+                </div>
+                <button onclick="printOrder()" class="btn btn-orange" style="width:100%;">طباعة الفاتورة 🖨️</button>
+            </div>
         </div>
-        <div class="pricing-card popular">
-            <h3>الاشتراك السنوي</h3>
-            <div class="price">400 <span>د.أ / سنوياً</span></div>
-            <ul class="price-features">
-                <li>توفير بقيمة 200 دينار</li>
-                <li>جميع مميزات الخطة الشهرية</li>
-                <li>تدريب الكادر مجاناً</li>
-            </ul>
-            <a href="#payment" class="btn btn-orange" style="display:block;">اختر طريقة الدفع</a>
-        </div>
-    </div>
-</section>
-
-<!-- Payment Methods Section -->
-<section id="payment">
-    <h2 class="section-title">طرق الدفع المتاحة</h2>
-    <div class="payment-methods-grid">
-        <div class="payment-card">
-            <h4>📱 زين كاش (Zain Cash)</h4>
-            <p>0791371566</p>
-            <span style="font-size:11px; color:#888;">حول المبلغ ثم أرسل إشعار التحويل</span>
-        </div>
-        <div class="payment-card">
-            <h4>🏦 كليك (CliQ)</h4>
-            <p>ALREES / 0791371566</p>
-            <span style="font-size:11px; color:#888;">تفعيل مباشر عبر الاسم أو الرقم</span>
-        </div>
-        <div class="payment-card">
-            <h4>📞 الدفع المباشر / كاش</h4>
-            <p>0791371566</p>
-            <span style="font-size:11px; color:#888;">التواصل المباشر مع المدير (الريس)</span>
-        </div>
-    </div>
-</section>
-
-<!-- Contact & Gift Redeem -->
-<div class="box-wrapper" id="contact">
-    <div class="support-box">
-        <h3 style="color:var(--primary-orange); margin-top:0;">إرسال إثبات الدفع والتفعيل</h3>
-        <p style="font-size:13px; color:#aaa;">بعد إتمام التحويل، أرسل الصورة عبر الواتساب لتسلم كود التفعيل المباشر:</p>
-        <div class="contact-links">
-            <a href="https://wa.me/962791371566" target="_blank" class="btn-whatsapp">إرسال الإثبات عبر الواتساب</a>
-            <a href="tel:0791371566" class="btn-call">اتصال مباشر</a>
-        </div>
-    </div>
-
-    <div class="redeem-box">
-        <h3 style="color:var(--primary-orange); margin-top:0;">تفعيل الكود</h3>
-        <p style="font-size:12px; color:#aaa;">أدخل كود الاشتراك أو الهدية الذي وصلك:</p>
-        <input type="text" id="gift-code-input" class="code-input" placeholder="أدخل الكود هنا...">
-        <button onclick="redeemCode()" class="btn btn-orange" style="width: 100%;">تفعيل</button>
-        <div id="status-msg" style="margin-top:10px; font-size:12px;"></div>
     </div>
 </div>
 
@@ -249,18 +348,102 @@
         "ALREES365": 365
     };
 
+    let cart = [];
+    let total = 0;
+
+    function applySubscriptionDays(days) {
+        let currentExpiry = localStorage.getItem('alrees_sub_expiry');
+        let baseTime = (currentExpiry && parseInt(currentExpiry) > new Date().getTime()) 
+            ? parseInt(currentExpiry) 
+            : new Date().getTime();
+            
+        let newExpiry = baseTime + (days * 24 * 60 * 60 * 1000);
+        localStorage.setItem('alrees_sub_expiry', newExpiry.toString());
+    }
+
+    function isSubscribed() {
+        let expiry = localStorage.getItem('alrees_sub_expiry');
+        if (!expiry) return false;
+        return new Date().getTime() < parseInt(expiry);
+    }
+
+    function getRemainingDays() {
+        let expiry = localStorage.getItem('alrees_sub_expiry');
+        if (!expiry) return 0;
+        let diff = parseInt(expiry) - new Date().getTime();
+        return Math.max(0, Math.ceil(diff / (1000 * 60 * 60 * 24)));
+    }
+
     function redeemCode() {
         let input = document.getElementById('gift-code-input').value.trim().toUpperCase();
         let msg = document.getElementById('status-msg');
 
         if (giftCodes[input]) {
+            let days = giftCodes[input];
+            applySubscriptionDays(days);
+            
             msg.style.color = "#10b981";
-            msg.innerText = `تم التفعيل بنجاح لمدة ${giftCodes[input]} يوماً!`;
-            document.getElementById('gift-code-input').value = '';
+            msg.innerText = `تم التفعيل بنجاح! جاري تحويلك لكاشير الريس...`;
+
+            setTimeout(() => {
+                openPOSView();
+            }, 1000);
         } else {
             msg.style.color = "#ef4444";
             msg.innerText = "الكود غير صحيح!";
         }
+    }
+
+    function checkAndLaunchPOS() {
+        if (isSubscribed()) {
+            openPOSView();
+        } else {
+            alert("اشتراكك غير فعال أو انتهت المدة! يرجى إدخال كود التفعيل أولاً.");
+            document.getElementById('contact').scrollIntoView({ behavior: 'smooth' });
+        }
+    }
+
+    function openPOSView() {
+        document.getElementById('landing-view').style.display = 'none';
+        document.getElementById('pos-view').style.display = 'block';
+        document.getElementById('sub-status').innerText = `الحساب نشط (المتبقي: ${getRemainingDays()} يوم)`;
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    function exitPOS() {
+        document.getElementById('pos-view').style.display = 'none';
+        document.getElementById('landing-view').style.display = 'block';
+    }
+
+    function addToCart(name, price) {
+        cart.push({ name, price });
+        total += price;
+        updateCartUI();
+    }
+
+    function updateCartUI() {
+        let list = document.getElementById('cart-items');
+        list.innerHTML = '';
+        cart.forEach((item) => {
+            let li = document.createElement('li');
+            li.style.display = 'flex';
+            li.style.justifyContent = 'space-between';
+            li.style.marginBottom = '8px';
+            li.innerText = `${item.name} - ${item.price.toFixed(3)} د.أ`;
+            list.appendChild(li);
+        });
+        document.getElementById('cart-total').innerText = `${total.toFixed(3)} د.أ`;
+    }
+
+    function printOrder() {
+        if (cart.length === 0) {
+            alert("السلة فارغة!");
+            return;
+        }
+        alert("تم إرسال الطلب للطباعة بنجاح!");
+        cart = [];
+        total = 0;
+        updateCartUI();
     }
 </script>
 
