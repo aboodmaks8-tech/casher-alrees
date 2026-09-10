@@ -163,6 +163,7 @@
             <span id="sub-status" style="font-size:11px; color:#10b981;">الحساب نشط</span>
         </div>
         <div style="display:flex; gap:8px; align-items:center;">
+            <button id="bt-status-btn" onclick="connectBluetoothPrinter()" class="btn btn-blue" style="font-size:11px; padding:6px 12px;">ربط طابعة البلوتوث 🛜</button>
             <button onclick="exportToExcel()" class="btn btn-green" style="font-size:11px; padding:6px 12px;">تصدير اكسل 📊</button>
             <select id="shift-select" style="width:auto; margin:0; padding:5px 10px; font-size:12px;">
                 <option value="صباحي">الشفت الصباحي</option>
@@ -283,6 +284,57 @@
     let totalProfit = 0;
     let invoiceCount = 0;
     let pendingCarts = [];
+
+    // متغيرة البلوتوث للطباعة
+    let printCharacteristic = null;
+
+    async function connectBluetoothPrinter() {
+        if (!navigator.bluetooth) {
+            alert("المتصفح لا يدعم البلوتوث المباشر! استخدم متصفح Google Chrome على الأندرويد أو الكمبيوتر.");
+            return;
+        }
+        try {
+            const device = await navigator.bluetooth.requestDevice({
+                acceptAllDevices: true,
+                optionalServices: ['000018f0-0000-1000-8000-00805f9b34fb', 'e7810a71-73ae-499d-8c15-faa9aef0c3f2']
+            });
+            const server = await device.gatt.connect();
+            const services = await server.getPrimaryServices();
+            for (let service of services) {
+                const characteristics = await service.getCharacteristics();
+                if (characteristics.length > 0) {
+                    printCharacteristic = characteristics[0];
+                    break;
+                }
+            }
+            if (printCharacteristic) {
+                document.getElementById('bt-status-btn').innerText = "تم الاتصال بالبلوتوث 🟢";
+                document.getElementById('bt-status-btn').style.background = "#10b981";
+                alert("تم ربط الطابعة بنجاح!");
+            } else {
+                alert("لم يتم العثور على خدمة طباعة متوافقة مع جهازك!");
+            }
+        } catch (error) {
+            console.error(error);
+            alert("فشل الاقتران بالبلوتوث: " + error.message);
+        }
+    }
+
+    async function sendTextToPrinter(text) {
+        if (!printCharacteristic) {
+            alert("طابعة البلوتوث غير متصلة! ارفع الفاتورة أو اضغط زر 'ربط طابعة البلوتوث' أولاً.");
+            return false;
+        }
+        try {
+            let encoder = new TextEncoder();
+            let data = encoder.encode(text + "\n\n\n");
+            await printCharacteristic.writeValue(data);
+            return true;
+        } catch (error) {
+            alert("حدث خطأ أثناء إرسال البيانات للطابعة: " + error.message);
+            return false;
+        }
+    }
 
     function applySubscriptionDays(days) {
         let currentExpiry = localStorage.getItem('alrees_sub_expiry');
@@ -520,14 +572,21 @@
         return final;
     }
 
-    function printKitchenOrder() {
+    async function printKitchenOrder() {
         let currentCart = tableCarts[activeTable] || [];
         if (currentCart.length === 0) return alert("الطلب فارغ!");
+        
         let details = currentCart.map(i => `- ${i.name} (${i.note || 'عادي'})`).join('\n');
-        alert(`👨‍🍳 أمر إعداد للمطبخ (${activeTable}):\n\n${details}`);
+        let printText = `--- امر اعداد للمطبخ ---\nالموقع: ${activeTable}\nالطلبات:\n${details}\n---------------------`;
+        
+        if (printCharacteristic) {
+            await sendTextToPrinter(printText);
+        } else {
+            alert(`👨‍🍳 أمر إعداد للمطبخ (${activeTable}):\n\n${details}`);
+        }
     }
 
-    function printInvoice() {
+    async function printInvoice() {
         let currentCart = tableCarts[activeTable] || [];
         if (currentCart.length === 0) {
             alert("الفاتورة فارغة!");
@@ -549,7 +608,22 @@
         document.getElementById('stat-total-profit').innerText = `${totalProfit.toFixed(3)} د.أ`;
         document.getElementById('stat-invoice-count').innerText = invoiceCount;
 
-        alert(`تم طباعة الفاتورة بنجاح!\nالموقع/الطاولة: ${activeTable}\nالشفت: ${shift}\nطريقة الدفع: ${method}\nالمبلغ: ${finalTotal.toFixed(3)} د.أ`);
+        let receiptText = `*** مطعم الريس ***\n` +
+            `الطاولة: ${activeTable}\n` +
+            `الشفت: ${shift}\n` +
+            `طريقة الدفع: ${method}\n` +
+            `------------------\n` +
+            currentCart.map(i => `${i.name} - ${i.price.toFixed(3)} د.أ`).join('\n') +
+            `\n------------------\n` +
+            `المجموع النهائي: ${finalTotal.toFixed(3)} د.أ\n` +
+            `شكرا لزيارتكم!`;
+
+        if (printCharacteristic) {
+            await sendTextToPrinter(receiptText);
+        } else {
+            alert(`تم طباعة الفاتورة بنجاح!\nالموقع/الطاولة: ${activeTable}\nالشفت: ${shift}\nطريقة الدفع: ${method}\nالمبلغ: ${finalTotal.toFixed(3)} د.أ`);
+        }
+
         clearCart();
     }
 
