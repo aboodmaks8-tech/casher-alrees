@@ -4,6 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>نظام كاشير الريس - الشامل المتطور</title>
+    <!-- استدعاء مكتبة لتحويل النصوص إلى ترميز Windows-1256 المتوافق مع الطابعة -->
+    <script src="https://cdn.jsdelivr.net/npm/iconv-jschardet@1.3.0/iconv.min.js"></script>
     <style>
         :root {
             --primary-orange: #ff7300;
@@ -285,18 +287,17 @@
     let invoiceCount = 0;
     let pendingCarts = [];
 
-    // متغيرة البلوتوث للطباعة
     let printCharacteristic = null;
 
     async function connectBluetoothPrinter() {
         if (!navigator.bluetooth) {
-            alert("المتصفح لا يدعم البلوتوث المباشر! استخدم متصفح Google Chrome على الأندرويد أو الكمبيوتر.");
+            alert("المتصفح لا يدعم البلوتوث المباشر! يرجى استخدام متصفح Chrome.");
             return;
         }
         try {
             const device = await navigator.bluetooth.requestDevice({
                 acceptAllDevices: true,
-                optionalServices: ['000018f0-0000-1000-8000-00805f9b34fb', 'e7810a71-73ae-499d-8c15-faa9aef0c3f2']
+                optionalServices: ['000018f0-0000-1000-8000-00805f9b34fb', 'e7810a71-73ae-499d-8c15-faa9aef0c3f2', '00001101-0000-1000-8000-00805f9b34fb']
             });
             const server = await device.gatt.connect();
             const services = await server.getPrimaryServices();
@@ -320,15 +321,31 @@
         }
     }
 
+    // إرسال النص مع تحويل صفحة الترميز إلى اللغة العربية للـ ESC/POS
     async function sendTextToPrinter(text) {
         if (!printCharacteristic) {
-            alert("طابعة البلوتوث غير متصلة! ارفع الفاتورة أو اضغط زر 'ربط طابعة البلوتوث' أولاً.");
+            alert("طابعة البلوتوث غير متصلة! اضغط زر 'ربط طابعة البلوتوث' أولاً.");
             return false;
         }
         try {
-            let encoder = new TextEncoder();
-            let data = encoder.encode(text + "\n\n\n");
-            await printCharacteristic.writeValue(data);
+            // أمر تهيئة الطابعة ESC @ + اختيار الترميز العربي CP864 (ESC t 22)
+            let initCmd = new Uint8Array([0x1B, 0x40, 0x1B, 0x74, 0x16]);
+            
+            // تحويل النص العربي من UTF-8 إلى ترميز CP864 / Windows-1256
+            let encodedText = iconv.encode(text + "\n\n\n", 'win1256');
+
+            // دمج الأوامر مع النص المرسل
+            let fullBuffer = new Uint8Array(initCmd.length + encodedText.length);
+            fullBuffer.set(initCmd, 0);
+            fullBuffer.set(encodedText, initCmd.length);
+
+            // تقسيم الإرسال لحزم صغيرة (20 بايت) للتوافق مع طابعات PT-210
+            const chunkSize = 20;
+            for (let i = 0; i < fullBuffer.length; i += chunkSize) {
+                let chunk = fullBuffer.slice(i, i + chunkSize);
+                await printCharacteristic.writeValue(chunk);
+            }
+
             return true;
         } catch (error) {
             alert("حدث خطأ أثناء إرسال البيانات للطابعة: " + error.message);
@@ -577,7 +594,7 @@
         if (currentCart.length === 0) return alert("الطلب فارغ!");
         
         let details = currentCart.map(i => `- ${i.name} (${i.note || 'عادي'})`).join('\n');
-        let printText = `--- امر اعداد للمطبخ ---\nالموقع: ${activeTable}\nالطلبات:\n${details}\n---------------------`;
+        let printText = `--- أمر إعداد للمطبخ ---\nالموقع: ${activeTable}\nالطلبات:\n${details}\n---------------------`;
         
         if (printCharacteristic) {
             await sendTextToPrinter(printText);
@@ -616,7 +633,7 @@
             currentCart.map(i => `${i.name} - ${i.price.toFixed(3)} د.أ`).join('\n') +
             `\n------------------\n` +
             `المجموع النهائي: ${finalTotal.toFixed(3)} د.أ\n` +
-            `شكرا لزيارتكم!`;
+            `شكراً لزيارتكم!`;
 
         if (printCharacteristic) {
             await sendTextToPrinter(receiptText);
@@ -642,3 +659,4 @@
 
 </body>
 </html>
+
