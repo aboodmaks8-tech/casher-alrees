@@ -4,8 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>نظام كاشير الريس - الشامل المتطور</title>
-    <!-- استدعاء مكتبة لتحويل النصوص إلى ترميز Windows-1256 المتوافق مع الطابعة -->
-    <script src="https://cdn.jsdelivr.net/npm/iconv-jschardet@1.3.0/iconv.min.js"></script>
     <style>
         :root {
             --primary-orange: #ff7300;
@@ -289,6 +287,37 @@
 
     let printCharacteristic = null;
 
+    // دالة تحويل الحروف العربية لترميز Windows-1256 مباشرة بدون مكتبات خارجية
+    function encodeArabicWin1256(str) {
+        const win1256Map = {
+            'ء': 0xC1, 'آ': 0xC2, 'أ': 0xC3, 'ؤ': 0xC4, 'إ': 0xC5, 'ئ': 0xC6, 'ا': 0xC7,
+            'ب': 0xC8, 'ة': 0xC9, 'ت': 0xCA, 'ث': 0xCB, 'ج': 0xCC, 'ح': 0xCD, 'خ': 0xCE,
+            'د': 0xCF, 'ذ': 0xD0, 'ر': 0xD1, 'ز': 0xD2, 'س': 0xD3, 'ش': 0xD4, 'ص': 0xD5,
+            'ض': 0xD6, 'ط': 0xD7, 'ظ': 0xD8, 'ع': 0xD9, 'غ': 0xDA, 'ف': 0xE1, 'ق': 0xE2,
+            'ك': 0xE3, 'ل': 0xE4, 'م': 0xE5, 'ن': 0xE6, 'ه': 0xE7, 'و': 0xE8, 'ى': 0xE9,
+            'ي': 0xEA, 'ً': 0xF0, 'ٌ': 0xF1, 'ٍ': 0xF2, 'َ': 0xF3, 'ُ': 0xF4, 'ِ': 0xF5,
+            'ّ': 0xF6, 'ْ': 0xF8, ' ': 0x20, '\n': 0x0A, '\r': 0x0D, ':': 0x3A, '-': 0x2D,
+            '*': 0x2A, '/': 0x2F, '.': 0x2E, '(': 0x28, ')': 0x29
+        };
+
+        let result = [];
+        for (let i = 0; i < str.length; i++) {
+            let char = str[i];
+            let code = char.charCodeAt(0);
+            
+            if (win1256Map[char] !== undefined) {
+                result.push(win1256Map[char]);
+            } else if (code >= 48 && code <= 57) { // أرقام إنجليزية 0-9
+                result.push(code);
+            } else if ((code >= 65 && code <= 90) || (code >= 97 && code <= 122)) { // حروف إنجليزية
+                result.push(code);
+            } else {
+                result.push(0x3F); // علامة استفهام لأي رمز غير معروف
+            }
+        }
+        return new Uint8Array(result);
+    }
+
     async function connectBluetoothPrinter() {
         if (!navigator.bluetooth) {
             alert("المتصفح لا يدعم البلوتوث المباشر! يرجى استخدام متصفح Chrome.");
@@ -321,25 +350,24 @@
         }
     }
 
-    // إرسال النص مع تحويل صفحة الترميز إلى اللغة العربية للـ ESC/POS
     async function sendTextToPrinter(text) {
         if (!printCharacteristic) {
             alert("طابعة البلوتوث غير متصلة! اضغط زر 'ربط طابعة البلوتوث' أولاً.");
             return false;
         }
         try {
-            // أمر تهيئة الطابعة ESC @ + اختيار الترميز العربي CP864 (ESC t 22)
+            // أمر تهيئة الطابعة ESC @ واختيار الترميز العربي CP864/Windows-1256
             let initCmd = new Uint8Array([0x1B, 0x40, 0x1B, 0x74, 0x16]);
             
-            // تحويل النص العربي من UTF-8 إلى ترميز CP864 / Windows-1256
-            let encodedText = iconv.encode(text + "\n\n\n", 'win1256');
+            // تحويل النص باستخدام خريطة الترميز المحلية
+            let encodedText = encodeArabicWin1256(text + "\n\n\n");
 
-            // دمج الأوامر مع النص المرسل
+            // دمج الأوامر مع النص
             let fullBuffer = new Uint8Array(initCmd.length + encodedText.length);
             fullBuffer.set(initCmd, 0);
             fullBuffer.set(encodedText, initCmd.length);
 
-            // تقسيم الإرسال لحزم صغيرة (20 بايت) للتوافق مع طابعات PT-210
+            // تقسيم الإرسال لحزم صغيرة لتجنب السقوط
             const chunkSize = 20;
             for (let i = 0; i < fullBuffer.length; i += chunkSize) {
                 let chunk = fullBuffer.slice(i, i + chunkSize);
@@ -659,4 +687,3 @@
 
 </body>
 </html>
-
