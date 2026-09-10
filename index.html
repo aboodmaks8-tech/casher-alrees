@@ -56,7 +56,7 @@
         
         .code-input, input, select { width: 100%; padding: 12px; margin: 8px 0; background: var(--card-bg); border: 1px solid var(--border-color); color: #fff; border-radius: 8px; font-size: 14px; }
 
-        #pos-view { display: none; padding: 15px; max-width: 1400px; margin: 0 auto; }
+        #pos-view, #report-view { display: none; padding: 15px; max-width: 1400px; margin: 0 auto; }
         .pos-header { display: flex; justify-content: space-between; align-items: center; background: var(--panel-bg); padding: 12px 20px; border-radius: 10px; border: 1px solid var(--border-color); margin-bottom: 15px; }
         .pos-main-grid { display: grid; grid-template-columns: 2.2fr 1fr; gap: 15px; }
         
@@ -75,9 +75,9 @@
         .cart-item { display: flex; flex-direction: column; background: var(--card-bg); border: 1px solid var(--border-color); padding: 10px; border-radius: 8px; margin-bottom: 8px; }
         .cart-item-row { display: flex; justify-content: space-between; align-items: center; }
 
-        .stats-summary { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 15px; background: var(--panel-bg); padding: 12px; border-radius: 8px; border: 1px solid var(--border-color); }
-        .stat-box { text-align: center; font-size: 12px; }
-        .stat-box strong { display: block; font-size: 16px; color: var(--primary-orange); margin-top: 4px; }
+        .stats-summary { display: grid; grid-template-columns: repeat( auto-fit, minmax(180px, 1fr) ); gap: 12px; margin-bottom: 15px; }
+        .stat-box { background: var(--panel-bg); padding: 15px; border-radius: 8px; border: 1px solid var(--border-color); text-align: center; font-size: 13px; }
+        .stat-box strong { display: block; font-size: 18px; color: var(--primary-orange); margin-top: 4px; }
 
         .modifier-btn { padding: 4px 8px; font-size: 11px; margin: 2px; border-radius: 4px; border: 1px solid var(--border-color); background: var(--card-bg); color: #fff; cursor: pointer; }
 
@@ -162,20 +162,13 @@
         </div>
         <div style="display:flex; gap:8px; align-items:center;">
             <button id="bt-status-btn" onclick="connectBluetoothPrinter()" class="btn btn-blue" style="font-size:11px; padding:6px 12px;">ربط طابعة البلوتوث 🛜</button>
-            <button onclick="exportToExcel()" class="btn btn-green" style="font-size:11px; padding:6px 12px;">تصدير اكسل 📊</button>
             <select id="shift-select" style="width:auto; margin:0; padding:5px 10px; font-size:12px;">
                 <option value="صباحي">الشفت الصباحي</option>
                 <option value="مسائي">الشفت المسائي</option>
             </select>
+            <button onclick="openReportsPage()" class="btn btn-orange" style="font-size:11px; padding:6px 12px;">جرد المبيعات 🔒</button>
             <button onclick="exitPOS()" class="btn btn-outline" style="font-size:11px; padding:6px 12px;">خروج</button>
         </div>
-    </div>
-
-    <div class="stats-summary">
-        <div class="stat-box">إجمالي المبيعات<strong id="stat-total-sales">0.000 د.أ</strong></div>
-        <div class="stat-box">صافي الأرباح<strong id="stat-total-profit" style="color:var(--green-accent);">0.000 د.أ</strong></div>
-        <div class="stat-box">عدد الفواتير<strong id="stat-invoice-count">0</strong></div>
-        <div class="stat-box">الطلبات المعلقة<strong id="stat-pending-count">0</strong></div>
     </div>
 
     <div style="margin-bottom:10px;">
@@ -250,12 +243,48 @@
     </div>
 </div>
 
+<!-- Report View (صفحة الجرد المستقلة) -->
+<div id="report-view">
+    <div class="pos-header">
+        <h3 style="margin:0; color:var(--primary-orange);">📊 صفحة الجرد والمبيعات اليومية</h3>
+        <div style="display:flex; gap:8px;">
+            <button onclick="exportToExcel()" class="btn btn-green" style="font-size:11px; padding:6px 12px;">تصدير اكسل 📊</button>
+            <button onclick="closeReportsPage()" class="btn btn-outline" style="font-size:11px; padding:6px 12px;">العودة للكاشير ←</button>
+        </div>
+    </div>
+
+    <!-- الإجمالي الكلي -->
+    <h4 style="color:var(--primary-orange); margin-bottom:10px;">المبيعات الإجمالية اليومية</h4>
+    <div class="stats-summary">
+        <div class="stat-box">إجمالي المبيعات<strong id="stat-total-sales">0.000 د.أ</strong></div>
+        <div class="stat-box">صافي الأرباح<strong id="stat-total-profit" style="color:var(--green-accent);">0.000 د.أ</strong></div>
+        <div class="stat-box">عدد الفواتير الكلي<strong id="stat-invoice-count">0</strong></div>
+    </div>
+
+    <!-- جرد الشفت الصباحي -->
+    <h4 style="color:var(--primary-orange); margin-bottom:10px; margin-top:20px;">جرد الشفت الصباحي ☀️</h4>
+    <div class="stats-summary">
+        <div class="stat-box">مبيعات الصباحي<strong id="stat-morning-sales">0.000 د.أ</strong></div>
+        <div class="stat-box">أرباح الصباحي<strong id="stat-morning-profit" style="color:var(--green-accent);">0.000 د.أ</strong></div>
+        <div class="stat-box">فواتير الصباحي<strong id="stat-morning-count">0</strong></div>
+    </div>
+
+    <!-- جرد الشفت المسائي -->
+    <h4 style="color:var(--primary-orange); margin-bottom:10px; margin-top:20px;">جرد الشفت المسائي 🌙</h4>
+    <div class="stats-summary">
+        <div class="stat-box">مبيعات المسائي<strong id="stat-evening-sales">0.000 د.أ</strong></div>
+        <div class="stat-box">أرباح المسائي<strong id="stat-evening-profit" style="color:var(--green-accent);">0.000 د.أ</strong></div>
+        <div class="stat-box">فواتير المسائي<strong id="stat-evening-count">0</strong></div>
+    </div>
+</div>
+
 <canvas id="receipt-canvas" style="display:none;"></canvas>
 
 <footer>جميع الحقوق محفوظة © نظام كاشير الريس المتكامل</footer>
 
 <script>
     const giftCodes = { "ALREES30": 30, "ALREES365": 365 };
+    const adminPassword = "1234"; // كلمة السر للوصول للجرد
     
     let categories = ["وجبات", "سناكات", "مشروبات"];
     let activeCategory = "وجبات";
@@ -272,11 +301,14 @@
     let activeTable = "سفري / مباشر";
     let tableCarts = { "سفري / مباشر": [] };
 
-    let totalSales = 0;
-    let totalProfit = 0;
-    let invoiceCount = 0;
-    let pendingCarts = [];
+    // متغيرات الجرد والمبيعات العامة
+    let totalSales = 0, totalProfit = 0, invoiceCount = 0;
+    
+    // متغيرات الجرد لكل شفت
+    let morningSales = 0, morningProfit = 0, morningCount = 0;
+    let eveningSales = 0, eveningProfit = 0, eveningCount = 0;
 
+    let pendingCarts = [];
     let printCharacteristic = null;
 
     async function connectBluetoothPrinter() {
@@ -412,6 +444,7 @@
 
     function openPOSView() {
         document.getElementById('landing-view').style.display = 'none';
+        document.getElementById('report-view').style.display = 'none';
         document.getElementById('pos-view').style.display = 'block';
         document.getElementById('sub-status').innerText = `الحساب نشط (المتبقي: ${getRemainingDays()} يوم)`;
         renderTableTabs();
@@ -420,8 +453,39 @@
         updateCategoryDropdown();
     }
 
+    function openReportsPage() {
+        let pwd = prompt("أدخل كلمة السر الخاصة بالجرد والمبيعات:");
+        if (pwd === adminPassword) {
+            document.getElementById('pos-view').style.display = 'none';
+            document.getElementById('report-view').style.display = 'block';
+            updateReportStats();
+        } else if (pwd !== null) {
+            alert("كلمة السر غير صحيحة!");
+        }
+    }
+
+    function closeReportsPage() {
+        document.getElementById('report-view').style.display = 'none';
+        document.getElementById('pos-view').style.display = 'block';
+    }
+
+    function updateReportStats() {
+        document.getElementById('stat-total-sales').innerText = `${totalSales.toFixed(3)} د.أ`;
+        document.getElementById('stat-total-profit').innerText = `${totalProfit.toFixed(3)} د.أ`;
+        document.getElementById('stat-invoice-count').innerText = invoiceCount;
+
+        document.getElementById('stat-morning-sales').innerText = `${morningSales.toFixed(3)} د.أ`;
+        document.getElementById('stat-morning-profit').innerText = `${morningProfit.toFixed(3)} د.أ`;
+        document.getElementById('stat-morning-count').innerText = morningCount;
+
+        document.getElementById('stat-evening-sales').innerText = `${eveningSales.toFixed(3)} د.أ`;
+        document.getElementById('stat-evening-profit').innerText = `${eveningProfit.toFixed(3)} د.أ`;
+        document.getElementById('stat-evening-count').innerText = eveningCount;
+    }
+
     function exitPOS() {
         document.getElementById('pos-view').style.display = 'none';
+        document.getElementById('report-view').style.display = 'none';
         document.getElementById('landing-view').style.display = 'block';
     }
 
@@ -565,7 +629,6 @@
         if (!currentCart || currentCart.length === 0) return alert("لا يوجد طلب لتعليقه!");
         pendingCarts.push([...currentCart]);
         clearCart();
-        document.getElementById('stat-pending-count').innerText = pendingCarts.length;
         alert("تم تعليق الطلب بنجاح!");
     }
 
@@ -652,16 +715,25 @@
         let profit = finalTotal - currentCost;
 
         let method = document.getElementById('pay-method').value;
+        let currentShift = document.getElementById('shift-select').value;
 
+        // تحديث إجمالي المبيعات
         totalSales += finalTotal;
         totalProfit += profit;
         invoiceCount++;
 
-        document.getElementById('stat-total-sales').innerText = `${totalSales.toFixed(3)} د.أ`;
-        document.getElementById('stat-total-profit').innerText = `${totalProfit.toFixed(3)} د.أ`;
-        document.getElementById('stat-invoice-count').innerText = invoiceCount;
+        // تحديث مبيعات الشفت المحدد (صباحي أم مسائي)
+        if (currentShift === "صباحي") {
+            morningSales += finalTotal;
+            morningProfit += profit;
+            morningCount++;
+        } else {
+            eveningSales += finalTotal;
+            eveningProfit += profit;
+            eveningCount++;
+        }
 
-        // تجميع العناصر المكررة لطباعة الكمية (1x, 2x, إلخ) بدلاً من التكرار
+        // تجميع العناصر المكررة
         let groupedItems = {};
         currentCart.forEach(item => {
             let key = item.name + "___" + (item.note || "");
@@ -679,17 +751,16 @@
             }
         });
 
-        // تنسيق الهيدر والجدول في مربع
         let lines = [
             "*** مطعم الريس ***",
             `الطاولة: ${activeTable}`,
+            `الشفت: ${currentShift}`,
             `طريقة الدفع: ${method}`,
             "================================",
             "الكمية |      الصنف      | السعر",
             "--------------------------------"
         ];
 
-        // إدراج الأصناف المجمعة بالأرقام والكمية
         Object.values(groupedItems).forEach(item => {
             let qtyStr = `${item.count}x`;
             lines.push(`${qtyStr.padEnd(6)} | ${item.name} | ${item.totalPrice.toFixed(3)} د.أ`);
@@ -713,12 +784,15 @@
     }
 
     function exportToExcel() {
-        let csvContent = "data:text/csv;charset=utf-8,المبيعات الإجمالية,الأرباح,عدد الفواتير\n" 
-            + `${totalSales.toFixed(3)},${totalProfit.toFixed(3)},${invoiceCount}`;
+        let csvContent = "data:text/csv;charset=utf-8,البند,المبيعات,الأرباح,عدد الفواتير\n" 
+            + `الشفت الصباحي,${morningSales.toFixed(3)},${morningProfit.toFixed(3)},${morningCount}\n`
+            + `الشفت المسائي,${eveningSales.toFixed(3)},${eveningProfit.toFixed(3)},${eveningCount}\n`
+            + `الإجمالي اليومي,${totalSales.toFixed(3)},${totalProfit.toFixed(3)},${invoiceCount}`;
+            
         let encodedUri = encodeURI(csvContent);
         let link = document.createElement("a");
         link.setAttribute("href", encodedUri);
-        link.setAttribute("download", `تقرير_مبيعات_الريس_${new Date().toISOString().slice(0,10)}.csv`);
+        link.setAttribute("download", `تقرير_جرد_الريس_${new Date().toISOString().slice(0,10)}.csv`);
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
