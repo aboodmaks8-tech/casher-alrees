@@ -1,252 +1,729 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>نظام كاشير الريس المتطور</title>
-  <style>
-    :root {
-      --bg-primary: #121212;
-      --bg-card: #1e1e1e;
-      --bg-accent: #f97316;
-      --text-main: #ffffff;
-      --border-color: #27272a;
-    }
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>نظام كاشير الريس - الشامل المتطور</title>
+    <style>
+        :root {
+            --primary-orange: #ff7300;
+            --dark-orange: #e06500;
+            --bg-dark: #121212;
+            --card-bg: #1e1e1e;
+            --panel-bg: #252525;
+            --text-light: #f5f5f5;
+            --border-color: #333;
+            --green-accent: #10b981;
+            --red-accent: #ef4444;
+            --blue-accent: #3b82f6;
+        }
 
-    body {
-      background-color: var(--bg-primary);
-      color: var(--text-main);
-      font-family: system-ui, -apple-system, sans-serif;
-      margin: 0;
-      padding: 15px;
-    }
+        * { box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        body { margin: 0; padding: 0; background-color: var(--bg-dark); color: var(--text-light); }
 
-    .top-bar {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      background: var(--bg-card);
-      padding: 12px 20px;
-      border-radius: 12px;
-      border: 1px solid var(--border-color);
-      margin-bottom: 15px;
-    }
+        nav {
+            background: rgba(30, 30, 30, 0.95);
+            backdrop-filter: blur(10px);
+            padding: 12px 5%;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid var(--border-color);
+            position: sticky; top: 0; z-index: 100;
+        }
 
-    .btn {
-      background: var(--bg-accent);
-      color: white;
-      border: none;
-      padding: 8px 16px;
-      border-radius: 8px;
-      cursor: pointer;
-      font-weight: bold;
-    }
+        .logo { font-size: 20px; font-weight: bold; color: var(--primary-orange); display: flex; align-items: center; gap: 8px; }
+        .nav-links { display: flex; gap: 15px; align-items: center; }
+        .nav-links a { color: var(--text-light); text-decoration: none; font-size: 13px; font-weight: 500; }
 
-    .main-grid {
-      display: grid;
-      grid-template-columns: 1fr 2fr;
-      gap: 15px;
-    }
+        .btn { padding: 12px 20px; border-radius: 8px; border: none; font-weight: bold; cursor: pointer; text-decoration: none; font-size: 14px; transition: 0.2s; user-select: none; }
+        .btn-orange { background: var(--primary-orange); color: #000; }
+        .btn-orange:hover { background: var(--dark-orange); }
+        .btn-outline { border: 1px solid var(--border-color); color: #fff; background: var(--card-bg); }
+        .btn-red { background: var(--red-accent); color: #fff; }
+        .btn-blue { background: var(--blue-accent); color: #fff; }
+        .btn-green { background: var(--green-accent); color: #fff; }
 
-    .panel {
-      background: var(--bg-card);
-      padding: 15px;
-      border-radius: 12px;
-      border: 1px solid var(--border-color);
-    }
+        .hero { padding: 40px 20px; text-align: center; background: radial-gradient(circle at center, rgba(255, 115, 0, 0.15) 0%, transparent 70%); }
+        .section-title { text-align: center; margin: 30px 0 15px 0; font-size: 20px; color: var(--primary-orange); }
 
-    .meals-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
-      gap: 10px;
-      margin-top: 10px;
-    }
+        .pricing-grid, .payment-methods-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 15px; max-width: 900px; margin: 0 auto; padding: 0 20px; }
+        .pricing-card, .payment-card { background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 12px; padding: 20px; text-align: center; }
+        .pricing-card.popular { border: 2px solid var(--primary-orange); }
 
-    .meal-card {
-      background: #2a2a2a;
-      border: 1px solid var(--border-color);
-      padding: 15px;
-      border-radius: 8px;
-      text-align: center;
-      cursor: pointer;
-      font-weight: bold;
-      color: var(--text-main);
-    }
+        .box-wrapper { max-width: 900px; margin: 30px auto; padding: 0 20px; display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px; }
+        .support-box, .redeem-box { background: var(--panel-bg); border: 1px solid var(--border-color); padding: 20px; border-radius: 12px; text-align: center; }
+        
+        .code-input, input, select { width: 100%; padding: 12px; margin: 8px 0; background: var(--card-bg); border: 1px solid var(--border-color); color: #fff; border-radius: 8px; font-size: 14px; }
 
-    .cart-item {
-      background: #2a2a2a;
-      border: 1px solid var(--border-color);
-      border-radius: 8px;
-      padding: 10px;
-      margin-bottom: 8px;
-      color: white;
-    }
+        #pos-view { display: none; padding: 15px; max-width: 1400px; margin: 0 auto; }
+        .pos-header { display: flex; justify-content: space-between; align-items: center; background: var(--panel-bg); padding: 12px 20px; border-radius: 10px; border: 1px solid var(--border-color); margin-bottom: 15px; }
+        .pos-main-grid { display: grid; grid-template-columns: 2.2fr 1fr; gap: 15px; }
+        
+        .category-tabs, .table-tabs { display: flex; gap: 8px; overflow-x: auto; margin-bottom: 12px; padding-bottom: 5px; }
+        .tab-btn { background: var(--card-bg); border: 1px solid var(--border-color); color: #fff; padding: 10px 18px; border-radius: 8px; cursor: pointer; white-space: nowrap; font-size: 13px; font-weight: bold; }
+        .tab-btn.active { background: var(--primary-orange); color: #000; border-color: var(--primary-orange); }
+        .tab-btn.occupied { background: #b91c1c; color: #fff; }
 
-    .qty-input {
-      width: 55px;
-      text-align: center;
-      background: #18181b;
-      color: #ffffff;
-      border: 1px solid var(--border-color);
-      border-radius: 6px;
-      padding: 3px;
-      font-weight: bold;
-    }
+        .menu-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 10px; margin-bottom: 15px; }
+        .item-card { background: var(--card-bg); border: 1px solid var(--border-color); padding: 15px 10px; border-radius: 10px; text-align: center; cursor: pointer; }
+        .item-card:hover { border-color: var(--primary-orange); }
 
-    .modal-overlay {
-      display: none;
-      position: fixed;
-      top: 0; left: 0; width: 100%; height: 100%;
-      background: rgba(0, 0, 0, 0.7);
-      backdrop-filter: blur(4px);
-      justify-content: center;
-      align-items: center;
-      z-index: 1000;
-    }
+        .management-box { background: var(--panel-bg); border: 1px solid var(--border-color); padding: 15px; border-radius: 10px; margin-bottom: 15px; }
 
-    .modal-content {
-      background: var(--bg-card);
-      padding: 25px;
-      border-radius: 16px;
-      width: 90%;
-      max-width: 380px;
-      text-align: center;
-      border: 1px solid var(--border-color);
-      color: white;
-    }
+        .cart-panel { background: var(--panel-bg); border: 1px solid var(--border-color); border-radius: 10px; padding: 15px; display: flex; flex-direction: column; }
+        .cart-item { display: flex; flex-direction: column; background: var(--card-bg); border: 1px solid var(--border-color); padding: 10px; border-radius: 8px; margin-bottom: 8px; }
+        .cart-item-row { display: flex; justify-content: space-between; align-items: center; }
 
-    .whatsapp-btn {
-      background: #25d366;
-      color: white;
-      text-decoration: none;
-      display: inline-block;
-      padding: 10px 20px;
-      border-radius: 8px;
-      font-weight: bold;
-      margin-top: 10px;
-    }
-  </style>
+        .stats-summary { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 15px; background: var(--panel-bg); padding: 12px; border-radius: 8px; border: 1px solid var(--border-color); }
+        .stat-box { text-align: center; font-size: 12px; }
+        .stat-box strong { display: block; font-size: 16px; color: var(--primary-orange); margin-top: 4px; }
+
+        .modifier-btn { padding: 4px 8px; font-size: 11px; margin: 2px; border-radius: 4px; border: 1px solid var(--border-color); background: var(--card-bg); color: #fff; cursor: pointer; }
+
+        footer { text-align: center; padding: 20px; border-top: 1px solid var(--border-color); margin-top: 30px; font-size: 12px; color: #666; }
+    </style>
 </head>
 <body>
 
-  <div class="top-bar">
-    <h2>🌸 نظام كاشير الريس المتطور</h2>
-    <button class="btn" onclick="openModal()">الاشتراكات</button>
-  </div>
-
-  <div class="main-grid">
-    <div class="panel">
-      <h3>الفاتورة</h3>
-      <div id="cartItemsContainer"></div>
-      <hr style="border-color: var(--border-color);">
-      <h4>المجموع النهائى: <span id="finalTotal">0.000</span> د.أ</h4>
+<nav>
+    <div class="logo">🌸 نظام كاشير الريس المتكامل</div>
+    <div class="nav-links">
+        <a href="#pricing">الاشتراكات</a>
+        <a href="#payment">طرق الدفع</a>
+        <button onclick="checkAndLaunchPOS()" class="btn btn-orange" style="font-size:12px;">دخول الكاشير ←</button>
     </div>
+</nav>
 
-    <div class="panel">
-      <h3>الوجبات</h3>
-      <div class="meals-grid">
-        <div class="meal-card" onclick="addToCart('وجبة الريس', 2.500)">
-          وجبة الريس<br><small style="color: var(--bg-accent);">2.500 د.أ</small>
+<!-- Landing View -->
+<div id="landing-view">
+    <section class="hero">
+        <h1 style="margin:0 0 10px 0;">اشتراكات نظام كاشير الريس المتكامل</h1>
+        <p style="color:#aaa; font-size:14px;">إدارة الأقسام، الطاولات، طباعة المطبخ، المخزون والأرباح التلقائية.</p>
+    </section>
+
+    <section id="pricing">
+        <h2 class="section-title">خطط الاشتراكات</h2>
+        <div class="pricing-grid">
+            <div class="pricing-card">
+                <h3>الاشتراك الشهري</h3>
+                <div style="font-size:24px; font-weight:bold; color:#fff; margin:10px 0;">50 <span style="font-size:12px; color:#888;">د.أ / شهر</span></div>
+                <a href="#payment" class="btn btn-outline" style="display:block;">اختر طريقة الدفع</a>
+            </div>
+            <div class="pricing-card popular">
+                <h3>الاشتراك السنوي</h3>
+                <div style="font-size:24px; font-weight:bold; color:#fff; margin:10px 0;">400 <span style="font-size:12px; color:#888;">د.أ / سنة</span></div>
+                <a href="#payment" class="btn btn-orange" style="display:block;">اختر طريقة الدفع</a>
+            </div>
         </div>
-        <div class="meal-card" onclick="addToCart('وجبة صاج دجاج', 3.000)">
-          وجبة صاج دجاج<br><small style="color: var(--bg-accent);">3.000 د.أ</small>
+    </section>
+
+    <section id="payment">
+        <h2 class="section-title">طرق الدفع المتاحة</h2>
+        <div class="payment-methods-grid">
+            <div class="payment-card">
+                <h4>🟠 أورنج موني (Orange Money)</h4>
+                <p style="direction:ltr; font-weight:bold;">0791371566</p>
+            </div>
+            <div class="payment-card">
+                <h4>🏦 كليك (CliQ)</h4>
+                <p style="direction:ltr; font-weight:bold;">XA991</p>
+            </div>
+            <div class="payment-card">
+                <h4>📞 كاش / مباشر</h4>
+                <p style="direction:ltr; font-weight:bold;">0791371566</p>
+            </div>
         </div>
-      </div>
-    </div>
-  </div>
+    </section>
 
-  <div id="subModal" class="modal-overlay">
-    <div class="modal-content">
-      <h3 style="color: var(--bg-accent); margin: 0 0 10px 0;">باقات الاشتراكات</h3>
-      <p style="margin: 5px 0;">اسم الموقع: <strong>naks8-tech</strong></p>
-      <p style="margin: 5px 0;">رقم التواصل: <span dir="ltr">+9627XXXXXXXX</span></p>
-      <a id="waLink" href="#" target="_blank" class="whatsapp-btn">تواصل مباشر عبر الواتساب 💬</a>
-      <br><br>
-      <button class="btn" style="background: #3f3f46;" onclick="closeModal()">إغلاق</button>
-    </div>
-  </div>
+    <div class="box-wrapper" id="contact">
+        <div class="support-box">
+            <h3 style="color:var(--primary-orange); margin-top:0;">التواصل والدعم المباشر</h3>
+            <p style="font-size:12px; color:#aaa;">للمدير (الريس): 0791371566</p>
+            <a href="https://wa.me/962791371566" target="_blank" class="btn btn-orange" style="display:inline-block; margin-top:10px;">تواصل واتساب</a>
+        </div>
 
-  <script>
-    function openModal() {
-      const phone = "9627XXXXXXXX";
-      const msg = encodeURIComponent("مرحباً، أرغب بالاستفسار عن اشتراكات موقع naks8-tech");
-      document.getElementById('waLink').href = `https://wa.me/${phone}?text=${msg}`;
-      document.getElementById('subModal').style.display = 'flex';
+        <div class="redeem-box">
+            <h3 style="color:var(--primary-orange); margin-top:0;">تفعيل الكود والدخول</h3>
+            <p style="font-size:12px; color:#aaa;">أدخل كود الاشتراك المعتمد للدخول:</p>
+            <input type="text" id="gift-code-input" class="code-input" placeholder="أدخل الكود هنا...">
+            <button onclick="redeemCode()" class="btn btn-orange" style="width: 100%;">تفعيل والدخول للكاشير 🚀</button>
+            <div id="status-msg" style="margin-top:10px; font-size:12px;"></div>
+        </div>
+    </div>
+</div>
+
+<!-- POS View -->
+<div id="pos-view">
+    <div class="pos-header">
+        <div>
+            <h3 style="margin:0; color:var(--primary-orange);">🌸 نظام كاشير الريس المتطور</h3>
+            <span id="sub-status" style="font-size:11px; color:#10b981;">الحساب نشط</span>
+        </div>
+        <div style="display:flex; gap:8px; align-items:center;">
+            <button id="bt-status-btn" onclick="connectBluetoothPrinter()" class="btn btn-blue" style="font-size:11px; padding:6px 12px;">ربط طابعة البلوتوث 🛜</button>
+            <button onclick="exportToExcel()" class="btn btn-green" style="font-size:11px; padding:6px 12px;">تصدير اكسل 📊</button>
+            <select id="shift-select" style="width:auto; margin:0; padding:5px 10px; font-size:12px;">
+                <option value="صباحي">الشفت الصباحي</option>
+                <option value="مسائي">الشفت المسائي</option>
+            </select>
+            <button onclick="exitPOS()" class="btn btn-outline" style="font-size:11px; padding:6px 12px;">خروج</button>
+        </div>
+    </div>
+
+    <div class="stats-summary">
+        <div class="stat-box">إجمالي المبيعات<strong id="stat-total-sales">0.000 د.أ</strong></div>
+        <div class="stat-box">صافي الأرباح<strong id="stat-total-profit" style="color:var(--green-accent);">0.000 د.أ</strong></div>
+        <div class="stat-box">عدد الفواتير<strong id="stat-invoice-count">0</strong></div>
+        <div class="stat-box">الطلبات المعلقة<strong id="stat-pending-count">0</strong></div>
+    </div>
+
+    <div style="margin-bottom:10px;">
+        <span style="font-size:12px; color:#aaa; display:block; margin-bottom:4px;">إدارة الطاولات والتسليم:</span>
+        <div class="table-tabs" id="table-tabs-container"></div>
+    </div>
+
+    <div class="pos-main-grid">
+        <div>
+            <div class="management-box">
+                <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
+                    <div>
+                        <h5 style="margin:0 0 6px 0; color:var(--primary-orange);">📁 إضافة قسم جديد</h5>
+                        <div style="display:flex; gap:5px;">
+                            <input type="text" id="new-category-name" placeholder="اسم القسم..." style="margin:0; font-size:12px; padding:6px;">
+                            <button onclick="addNewCategory()" class="btn btn-blue" style="padding:6px 10px; font-size:11px; white-space:nowrap;">إضافة</button>
+                        </div>
+                    </div>
+                    <div>
+                        <h5 style="margin:0 0 6px 0; color:var(--primary-orange);">➕ إضافة صنف وتكلفة للربح</h5>
+                        <div style="display:flex; gap:5px;">
+                            <input type="text" id="new-item-name" placeholder="الصنف" style="margin:0; font-size:12px; padding:6px;">
+                            <input type="number" id="new-item-price" placeholder="البيع" step="0.1" style="margin:0; font-size:12px; padding:6px; width:65px;">
+                            <input type="number" id="new-item-cost" placeholder="التكلفة" step="0.1" style="margin:0; font-size:12px; padding:6px; width:65px;">
+                            <select id="item-category-select" style="margin:0; font-size:12px; padding:6px; width:90px;"></select>
+                            <button onclick="addNewCustomMenuItem()" class="btn btn-orange" style="padding:6px 10px; font-size:11px; white-space:nowrap;">حفظ</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="category-tabs" id="category-tabs-container"></div>
+            <div class="menu-grid" id="menu-grid-container"></div>
+        </div>
+
+        <div class="cart-panel">
+            <h4 style="margin:0 0 10px 0;">الفاتورة: <span id="current-table-title" style="color:var(--primary-orange);">سفري / مباشر</span></h4>
+            
+            <div id="cart-list" style="flex-grow:1; overflow-y:auto; max-height:280px;">
+                <p style="color:#666; text-align:center; font-size:12px;">لا يوجد أصناف بالفاتورة</p>
+            </div>
+
+            <div style="margin-top:10px; border-top:1px solid var(--border-color); padding-top:10px;">
+                <div style="display:flex; gap:8px; align-items:center; margin-bottom:8px;">
+                    <span style="font-size:12px; color:#aaa;">طريقة الدفع:</span>
+                    <select id="pay-method" style="margin:0; padding:4px; font-size:11px;">
+                        <option value="كاش">نقداً (كاش)</option>
+                        <option value="بطاقة / كليك">بطاقة / كليك</option>
+                    </select>
+                </div>
+
+                <div style="display:flex; gap:8px; align-items:center; margin-bottom:8px;">
+                    <span style="font-size:12px; color:#aaa;">خصم (د.أ):</span>
+                    <input type="number" id="discount-input" value="0" min="0" step="0.1" onchange="updateCartTotal()" style="margin:0; padding:4px 8px; font-size:12px;">
+                </div>
+
+                <div style="display:flex; justify-content:space-between; font-weight:bold; font-size:15px; margin-bottom:10px;">
+                    <span>المجموع النهائي:</span>
+                    <span id="final-total" style="color:var(--primary-orange);">0.000 د.أ</span>
+                </div>
+
+                <div style="display:grid; grid-template-columns: 1fr 1fr; gap:5px; margin-bottom:5px;">
+                    <button onclick="holdCurrentCart()" class="btn btn-blue" style="padding:8px; font-size:11px;">تعليق الطلب ⏸️</button>
+                    <button onclick="printKitchenOrder()" class="btn btn-outline" style="padding:8px; font-size:11px;">طباعة للمطبخ 👨‍🍳</button>
+                </div>
+                <div style="display:grid; grid-template-columns: 1fr 1fr; gap:5px;">
+                    <button onclick="clearCart()" class="btn btn-red" style="padding:8px; font-size:11px;">إلغاء الطلب ✕</button>
+                    <button onclick="printInvoice()" class="btn btn-orange" style="padding:8px; font-size:11px;">طباعة الفاتورة 🖨️</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<canvas id="receipt-canvas" style="display:none;"></canvas>
+
+<footer>جميع الحقوق محفوظة © نظام كاشير الريس المتكامل</footer>
+
+<script>
+    const giftCodes = { "ALREES30": 30, "ALREES365": 365 };
+    
+    let categories = ["وجبات", "سناكات", "مشروبات"];
+    let activeCategory = "وجبات";
+    
+    let menuItems = [
+        { id: 1, name: "وجبة الريس", price: 2.500, cost: 1.200, category: "وجبات" },
+        { id: 2, name: "وجبة صاج لحم", price: 3.000, cost: 1.500, category: "وجبات" },
+        { id: 3, name: "زنجر سوبريم", price: 2.200, cost: 1.000, category: "سناكات" },
+        { id: 4, name: "بطاطا مقلية", price: 1.000, cost: 0.300, category: "سناكات" },
+        { id: 5, name: "مشروب غازي", price: 0.500, cost: 0.250, category: "مشروبات" }
+    ];
+
+    let tables = ["سفري / مباشر", "طاولة 1", "طاولة 2", "طاولة 3", "طاولة 4"];
+    let activeTable = "سفري / مباشر";
+    let tableCarts = { "سفري / مباشر": [] };
+
+    let totalSales = 0;
+    let totalProfit = 0;
+    let invoiceCount = 0;
+    let pendingCarts = [];
+
+    let printCharacteristic = null;
+
+    async function connectBluetoothPrinter() {
+        if (!navigator.bluetooth) {
+            alert("المتصفح لا يدعم البلوتوث المباشر! يرجى استخدام متصفح Chrome.");
+            return;
+        }
+        try {
+            const device = await navigator.bluetooth.requestDevice({
+                acceptAllDevices: true,
+                optionalServices: ['000018f0-0000-1000-8000-00805f9b34fb', 'e7810a71-73ae-499d-8c15-faa9aef0c3f2', '00001101-0000-1000-8000-00805f9b34fb']
+            });
+            const server = await device.gatt.connect();
+            const services = await server.getPrimaryServices();
+            for (let service of services) {
+                const characteristics = await service.getCharacteristics();
+                if (characteristics.length > 0) {
+                    printCharacteristic = characteristics[0];
+                    break;
+                }
+            }
+            if (printCharacteristic) {
+                document.getElementById('bt-status-btn').innerText = "تم الاتصال بالبلوتوث 🟢";
+                document.getElementById('bt-status-btn').style.background = "#10b981";
+                alert("تم ربط الطابعة بنجاح!");
+            } else {
+                alert("لم يتم العثور على خدمة طباعة متوافقة!");
+            }
+        } catch (error) {
+            console.error(error);
+            alert("فشل الاقتران بالبلوتوث: " + error.message);
+        }
     }
 
-    function closeModal() {
-      document.getElementById('subModal').style.display = 'none';
-    }
+    async function printReceiptAsImage(lines) {
+        if (!printCharacteristic) {
+            alert("طابعة البلوتوث غير متصلة! اضغط 'ربط طابعة البلوتوث' أولاً.");
+            return false;
+        }
 
-    let cart = [];
+        let canvas = document.getElementById('receipt-canvas');
+        let ctx = canvas.getContext('2d');
+        
+        let width = 384; 
+        let lineHeight = 32;
+        let height = lines.length * lineHeight + 40;
 
-    function addToCart(itemName, price, options = {}) {
-      const optionsKey = JSON.stringify(options);
-      let existingItem = cart.find(item => item.name === itemName && item.optionsKey === optionsKey);
+        canvas.width = width;
+        canvas.height = height;
 
-      if (existingItem) {
-        existingItem.qty += 1;
-      } else {
-        cart.push({
-          name: itemName,
-          price: price,
-          qty: 1,
-          options: options,
-          optionsKey: optionsKey
+        ctx.fillStyle = '#FFFFFF';
+        ctx.fillRect(0, 0, width, height);
+
+        ctx.fillStyle = '#000000';
+        ctx.font = 'bold 22px "Segoe UI", Arial, sans-serif';
+        ctx.textAlign = 'center';
+        ctx.direction = 'rtl';
+
+        lines.forEach((line, index) => {
+            ctx.fillText(line, width / 2, (index + 1) * lineHeight);
         });
-      }
-      renderCart();
+
+        let imgData = ctx.getImageData(0, 0, width, height);
+        let bytes = [];
+
+        bytes.push(0x1B, 0x40);
+
+        for (let y = 0; y < height; y += 24) {
+            bytes.push(0x1B, 0x2A, 33, width & 0xFF, (width >> 8) & 0xFF);
+            for (let x = 0; x < width; x++) {
+                for (let k = 0; k < 3; k++) {
+                    let slice = 0;
+                    for (let b = 0; b < 8; b++) {
+                        let py = y + k * 8 + b;
+                        if (py < height) {
+                            let offset = (py * width + x) * 4;
+                            let r = imgData.data[offset];
+                            if (r < 128) slice |= (1 << (7 - b));
+                        }
+                    }
+                    bytes.push(slice);
+                }
+            }
+            bytes.push(0x0A);
+        }
+        bytes.push(0x0A, 0x0A, 0x0A);
+
+        let uint8Array = new Uint8Array(bytes);
+        const chunkSize = 20;
+        for (let i = 0; i < uint8Array.length; i += chunkSize) {
+            let chunk = uint8Array.slice(i, i + chunkSize);
+            await printCharacteristic.writeValue(chunk);
+        }
+
+        return true;
     }
 
-    function updateQuantity(index, newQty) {
-      let parsedQty = parseInt(newQty);
-      cart[index].qty = (isNaN(parsedQty) || parsedQty < 1) ? 1 : parsedQty;
-      renderCart();
+    function applySubscriptionDays(days) {
+        let currentExpiry = localStorage.getItem('alrees_sub_expiry');
+        let baseTime = (currentExpiry && parseInt(currentExpiry) > new Date().getTime()) ? parseInt(currentExpiry) : new Date().getTime();
+        localStorage.setItem('alrees_sub_expiry', (baseTime + (days * 24 * 60 * 60 * 1000)).toString());
     }
 
-    function removeFromCart(index) {
-      cart.splice(index, 1);
-      renderCart();
+    function isSubscribed() {
+        let expiry = localStorage.getItem('alrees_sub_expiry');
+        return expiry && new Date().getTime() < parseInt(expiry);
+    }
+
+    function getRemainingDays() {
+        let expiry = localStorage.getItem('alrees_sub_expiry');
+        if (!expiry) return 0;
+        return Math.max(0, Math.ceil((parseInt(expiry) - new Date().getTime()) / (1000 * 60 * 60 * 24)));
+    }
+
+    function redeemCode() {
+        let input = document.getElementById('gift-code-input').value.trim().toUpperCase();
+        let msg = document.getElementById('status-msg');
+        if (giftCodes[input]) {
+            applySubscriptionDays(giftCodes[input]);
+            msg.style.color = "#10b981";
+            msg.innerText = "تم التفعيل بنجاح! جاري تحويلك للكاشير...";
+            setTimeout(openPOSView, 1000);
+        } else {
+            msg.style.color = "#ef4444";
+            msg.innerText = "الكود غير صحيح!";
+        }
+    }
+
+    function checkAndLaunchPOS() {
+        if (isSubscribed()) openPOSView();
+        else alert("اشتراكك غير فعال! يرجى إدخال كود التفعيل أولاً.");
+    }
+
+    function openPOSView() {
+        document.getElementById('landing-view').style.display = 'none';
+        document.getElementById('pos-view').style.display = 'block';
+        document.getElementById('sub-status').innerText = `الحساب نشط (المتبقي: ${getRemainingDays()} يوم)`;
+        renderTableTabs();
+        renderCategoryTabs();
+        renderMenuGrid();
+        updateCategoryDropdown();
+    }
+
+    function exitPOS() {
+        document.getElementById('pos-view').style.display = 'none';
+        document.getElementById('landing-view').style.display = 'block';
+    }
+
+    function renderTableTabs() {
+        let container = document.getElementById('table-tabs-container');
+        container.innerHTML = '';
+        tables.forEach(tbl => {
+            let hasItems = tableCarts[tbl] && tableCarts[tbl].length > 0;
+            let btn = document.createElement('button');
+            btn.className = `tab-btn ${tbl === activeTable ? 'active' : ''} ${hasItems && tbl !== activeTable ? 'occupied' : ''}`;
+            btn.innerText = tbl + (hasItems ? ' (مشغولة)' : '');
+            btn.onclick = () => {
+                activeTable = tbl;
+                if (!tableCarts[activeTable]) tableCarts[activeTable] = [];
+                document.getElementById('current-table-title').innerText = activeTable;
+                renderTableTabs();
+                renderCart();
+            };
+            container.appendChild(btn);
+        });
+    }
+
+    function renderCategoryTabs() {
+        let container = document.getElementById('category-tabs-container');
+        container.innerHTML = '';
+        categories.forEach(cat => {
+            let btn = document.createElement('button');
+            btn.className = `tab-btn ${cat === activeCategory ? 'active' : ''}`;
+            btn.innerText = cat;
+            btn.onclick = () => {
+                activeCategory = cat;
+                renderCategoryTabs();
+                renderMenuGrid();
+            };
+            container.appendChild(btn);
+        });
+    }
+
+    function updateCategoryDropdown() {
+        let select = document.getElementById('item-category-select');
+        select.innerHTML = '';
+        categories.forEach(cat => {
+            let opt = document.createElement('option');
+            opt.value = cat;
+            opt.innerText = cat;
+            select.appendChild(opt);
+        });
+    }
+
+    function addNewCategory() {
+        let name = document.getElementById('new-category-name').value.trim();
+        if (!name) return alert("يرجى كتابة اسم القسم!");
+        if (categories.includes(name)) return alert("القسم موجود بالفعّل!");
+
+        categories.push(name);
+        activeCategory = name;
+        document.getElementById('new-category-name').value = '';
+        renderCategoryTabs();
+        updateCategoryDropdown();
+        renderMenuGrid();
+    }
+
+    function addNewCustomMenuItem() {
+        let name = document.getElementById('new-item-name').value.trim();
+        let price = parseFloat(document.getElementById('new-item-price').value);
+        let cost = parseFloat(document.getElementById('new-item-cost').value) || 0;
+        let category = document.getElementById('item-category-select').value;
+
+        if (!name || isNaN(price)) {
+            alert("يرجى إدخال اسم الصنف والسعر بشكل صحيح!");
+            return;
+        }
+
+        menuItems.push({ id: Date.now(), name, price, cost, category });
+        document.getElementById('new-item-name').value = '';
+        document.getElementById('new-item-price').value = '';
+        document.getElementById('new-item-cost').value = '';
+
+        activeCategory = category;
+        renderCategoryTabs();
+        renderMenuGrid();
+    }
+
+    function renderMenuGrid() {
+        let container = document.getElementById('menu-grid-container');
+        container.innerHTML = '';
+
+        let filteredItems = menuItems.filter(item => item.category === activeCategory);
+        if (filteredItems.length === 0) {
+            container.innerHTML = '<p style="color:#666; font-size:12px; grid-column:1/-1;">لا يوجد أصناف في هذا القسم</p>';
+            return;
+        }
+
+        filteredItems.forEach(item => {
+            let div = document.createElement('div');
+            div.className = 'item-card';
+            div.onclick = () => addToCart(item);
+            div.innerHTML = `<h5 style="margin:0 0 5px 0;">${item.name}</h5><span style="color:var(--primary-orange); font-size:13px; font-weight:bold;">${item.price.toFixed(3)} د.أ</span>`;
+            container.appendChild(div);
+        });
+    }
+
+    function addToCart(item) {
+        if (!tableCarts[activeTable]) tableCarts[activeTable] = [];
+        tableCarts[activeTable].push({ id: Date.now(), name: item.name, price: item.price, cost: item.cost, note: "", extraPrice: 0 });
+        renderTableTabs();
+        renderCart();
+    }
+
+    function addQuickModifier(id, text, priceAdd) {
+        let currentCart = tableCarts[activeTable];
+        let item = currentCart.find(i => i.id === id);
+        if (item) {
+            item.note += (item.note ? "، " : "") + text;
+            item.price += priceAdd;
+            renderCart();
+        }
+    }
+
+    function updateNote(id, noteText) {
+        let currentCart = tableCarts[activeTable];
+        let item = currentCart.find(i => i.id === id);
+        if (item) item.note = noteText;
+    }
+
+    function removeFromCart(id) {
+        tableCarts[activeTable] = tableCarts[activeTable].filter(i => i.id !== id);
+        renderTableTabs();
+        renderCart();
+    }
+
+    function clearCart() {
+        tableCarts[activeTable] = [];
+        document.getElementById('discount-input').value = 0;
+        renderTableTabs();
+        renderCart();
+    }
+
+    function holdCurrentCart() {
+        let currentCart = tableCarts[activeTable];
+        if (!currentCart || currentCart.length === 0) return alert("لا يوجد طلب لتعليقه!");
+        pendingCarts.push([...currentCart]);
+        clearCart();
+        document.getElementById('stat-pending-count').innerText = pendingCarts.length;
+        alert("تم تعليق الطلب بنجاح!");
     }
 
     function renderCart() {
-      const container = document.getElementById('cartItemsContainer');
-      if (!container) return;
+        let container = document.getElementById('cart-list');
+        let currentCart = tableCarts[activeTable] || [];
 
-      container.innerHTML = '';
-      let totalAmount = 0;
+        if (currentCart.length === 0) {
+            container.innerHTML = '<p style="color:#666; text-align:center; font-size:12px;">لا يوجد أصناف بالفاتورة</p>';
+            updateCartTotal();
+            return;
+        }
 
-      cart.forEach((item, index) => {
-        let itemTotal = item.price * item.qty;
-        totalAmount += itemTotal;
-
-        container.innerHTML += `
-          <div class="cart-item">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
-              <div>
-                <strong>${item.name}</strong> 
-                <span style="color: #f97316; font-weight: bold; margin-right: 6px;">(${item.qty}x)</span>
-              </div>
-              <button onclick="removeFromCart(${index})" style="background: transparent; color: #ef4444; border: none; cursor: pointer; font-weight: bold;">✕</button>
-            </div>
-            <div style="display: flex; justify-content: space-between; align-items: center; gap: 8px;">
-              <div style="display: flex; align-items: center; gap: 6px;">
-                <label style="font-size: 12px; color: #a1a1aa;">الكمية:</label>
-                <input type="number" 
-                       class="qty-input"
-                       value="${item.qty}" 
-                       min="1" 
-                       onchange="updateQuantity(${index}, this.value)" />
-              </div>
-              <div style="font-weight: bold; color: #f97316;">${itemTotal.toFixed(3)} د.أ</div>
-            </div>
-          </div>
-        `;
-      });
-
-      const totalElement = document.getElementById('finalTotal');
-      if (totalElement) totalElement.innerText = totalAmount.toFixed(3);
+        container.innerHTML = '';
+        currentCart.forEach(item => {
+            let div = document.createElement('div');
+            div.className = 'cart-item';
+            div.innerHTML = `
+                <div class="cart-item-row">
+                    <strong style="font-size:13px;">${item.name}</strong>
+                    <span style="color:var(--primary-orange); font-size:12px;">${item.price.toFixed(3)} د.أ</span>
+                    <button onclick="removeFromCart(${item.id})" style="background:none; border:none; color:var(--red-accent); cursor:pointer; font-size:12px;">✕</button>
+                </div>
+                <div>
+                    <button class="modifier-btn" onclick="addQuickModifier(${item.id}, 'بدون ثوم', 0)">بدون ثوم</button>
+                    <button class="modifier-btn" onclick="addQuickModifier(${item.id}, 'شطة إضافية', 0)">شطة</button>
+                    <button class="modifier-btn" onclick="addQuickModifier(${item.id}, 'جبنة إضافية', 0.300)">+ جبنة (0.30)</button>
+                </div>
+                <input type="text" placeholder="ملاحظة / إضافة..." value="${item.note}" onkeyup="updateNote(${item.id}, this.value)" onchange="updateNote(${item.id}, this.value)" style="margin-top:5px; padding:3px 6px; font-size:11px;">
+            `;
+            container.appendChild(div);
+        });
+        updateCartTotal();
     }
-  </script>
+
+    function updateCartTotal() {
+        let currentCart = tableCarts[activeTable] || [];
+        let subtotal = currentCart.reduce((sum, item) => sum + item.price, 0);
+        let discount = parseFloat(document.getElementById('discount-input').value) || 0;
+        let final = Math.max(0, subtotal - discount);
+        document.getElementById('final-total').innerText = `${final.toFixed(3)} د.أ`;
+        return final;
+    }
+
+    async function printKitchenOrder() {
+        let currentCart = tableCarts[activeTable] || [];
+        if (currentCart.length === 0) return alert("الطلب فارغ!");
+        
+        let grouped = {};
+        currentCart.forEach(i => {
+            let key = i.name + "___" + (i.note || "");
+            if (!grouped[key]) {
+                grouped[key] = { name: i.name, note: i.note, count: 0 };
+            }
+            grouped[key].count++;
+        });
+
+        let lines = [
+            "--- أمر إعداد للمطبخ ---",
+            `الموقع: ${activeTable}`,
+            "---------------------"
+        ];
+        
+        Object.values(grouped).forEach(i => {
+            lines.push(`${i.count}x  ${i.name} (${i.note || 'عادي'})`);
+        });
+
+        if (printCharacteristic) {
+            await printReceiptAsImage(lines);
+        } else {
+            alert(`👨‍🍳 أمر إعداد للمطبخ (${activeTable}):\n\n` + lines.join('\n'));
+        }
+    }
+
+    async function printInvoice() {
+        let currentCart = tableCarts[activeTable] || [];
+        if (currentCart.length === 0) {
+            alert("الفاتورة فارغة!");
+            return;
+        }
+
+        let finalTotal = updateCartTotal();
+        let currentCost = currentCart.reduce((sum, item) => sum + item.cost, 0);
+        let profit = finalTotal - currentCost;
+
+        let method = document.getElementById('pay-method').value;
+
+        totalSales += finalTotal;
+        totalProfit += profit;
+        invoiceCount++;
+
+        document.getElementById('stat-total-sales').innerText = `${totalSales.toFixed(3)} د.أ`;
+        document.getElementById('stat-total-profit').innerText = `${totalProfit.toFixed(3)} د.أ`;
+        document.getElementById('stat-invoice-count').innerText = invoiceCount;
+
+        // تجميع العناصر المكررة لطباعة الكمية (1x, 2x, إلخ) بدلاً من التكرار
+        let groupedItems = {};
+        currentCart.forEach(item => {
+            let key = item.name + "___" + (item.note || "");
+            if (!groupedItems[key]) {
+                groupedItems[key] = {
+                    name: item.name,
+                    unitPrice: item.price,
+                    totalPrice: item.price,
+                    note: item.note,
+                    count: 1
+                };
+            } else {
+                groupedItems[key].count += 1;
+                groupedItems[key].totalPrice += item.price;
+            }
+        });
+
+        // تنسيق الهيدر والجدول في مربع
+        let lines = [
+            "*** مطعم الريس ***",
+            `الطاولة: ${activeTable}`,
+            `طريقة الدفع: ${method}`,
+            "================================",
+            "الكمية |      الصنف      | السعر",
+            "--------------------------------"
+        ];
+
+        // إدراج الأصناف المجمعة بالأرقام والكمية
+        Object.values(groupedItems).forEach(item => {
+            let qtyStr = `${item.count}x`;
+            lines.push(`${qtyStr.padEnd(6)} | ${item.name} | ${item.totalPrice.toFixed(3)} د.أ`);
+            if (item.note && item.note.trim() !== "") {
+                lines.push(`       ↳ إضافات: ${item.note.trim()}`);
+            }
+        });
+
+        lines.push("--------------------------------");
+        lines.push(`المجموع النهائي: ${finalTotal.toFixed(3)} د.أ`);
+        lines.push("================================");
+        lines.push("شكراً لزيارتكم!");
+
+        if (printCharacteristic) {
+            await printReceiptAsImage(lines);
+        } else {
+            alert(`تم طباعة الفاتورة بنجاح!\n\n` + lines.join('\n'));
+        }
+
+        clearCart();
+    }
+
+    function exportToExcel() {
+        let csvContent = "data:text/csv;charset=utf-8,المبيعات الإجمالية,الأرباح,عدد الفواتير\n" 
+            + `${totalSales.toFixed(3)},${totalProfit.toFixed(3)},${invoiceCount}`;
+        let encodedUri = encodeURI(csvContent);
+        let link = document.createElement("a");
+        link.setAttribute("href", encodedUri);
+        link.setAttribute("download", `تقرير_مبيعات_الريس_${new Date().toISOString().slice(0,10)}.csv`);
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    }
+</script>
+
 </body>
 </html>
