@@ -619,7 +619,7 @@
             `الموقع: ${activeTable}`,
             "---------------------"
         ];
-        currentCart.forEach(i => lines.push(`- ${i.name} (${i.note || 'عادي'})`));
+        currentCart.forEach((i, idx) => lines.push(`${idx + 1}. ${i.name} (${i.note || 'عادي'})`));
 
         if (printCharacteristic) {
             await printReceiptAsImage(lines);
@@ -649,30 +649,32 @@
         document.getElementById('stat-total-profit').innerText = `${totalProfit.toFixed(3)} د.أ`;
         document.getElementById('stat-invoice-count').innerText = invoiceCount;
 
-        // تعديل الهيدر: تم إزالة الشفت وإبقاء طريقة الدفع والطاولة فقط
+        // تنسيق وترقيم الفاتورة المحدث والمنظم
         let lines = [
-            "*** مطعم الريس ***",
-            `الطاولة: ${activeTable}`,
+            "★ ★ ★ مطعم الريس ★ ★ ★",
+            "================================",
+            `نوع الطلب: ${activeTable}`,
             `طريقة الدفع: ${method}`,
-            "--------------------------------"
+            "================================"
         ];
 
-        // طباعة الأصناف مع الملاحظات/الإضافات إن وجدت
-        currentCart.forEach(i => {
-            lines.push(`${i.name} : ${i.price.toFixed(3)} د.أ`);
+        // ترقيم الأصناف (1.، 2.، 3. ...) وطباعة التفاصيل
+        currentCart.forEach((i, index) => {
+            lines.push(`${index + 1}. ${i.name} : ${i.price.toFixed(3)} د.أ`);
             if (i.note && i.note.trim() !== "") {
-                lines.push(`   * إضافات: ${i.note.trim()}`);
+                lines.push(`    ↳ إضافات: ${i.note.trim()}`);
             }
         });
 
         lines.push("--------------------------------");
         lines.push(`المجموع النهائي: ${finalTotal.toFixed(3)} د.أ`);
-        lines.push("شكراً لزيارتكم!");
+        lines.push("================================");
+        lines.push("أهلاً وسهلاً بكم - شكراً لزيارتكم!");
 
         if (printCharacteristic) {
             await printReceiptAsImage(lines);
         } else {
-            alert(`تم طباعة الفاتورة بنجاح!\n` + lines.join('\n'));
+            alert(`تم طباعة الفاتورة بنجاح!\n\n` + lines.join('\n'));
         }
 
         clearCart();
