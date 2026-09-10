@@ -1,81 +1,252 @@
-// --- إدارة سلة الشراء وتجميع العناصر والتعديل على الكميات ---
-let cart = [];
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>نظام كاشير الريس المتطور</title>
+  <style>
+    :root {
+      --bg-primary: #121212;
+      --bg-card: #1e1e1e;
+      --bg-accent: #f97316;
+      --text-main: #ffffff;
+      --border-color: #27272a;
+    }
 
-// إضافة عنصر للسلة مع الدمج التلقائي إذا كان الصنف والنوتات مطابقة
-function addToCart(itemName, price, options = {}) {
-  // إنشاء مفتاح فريد لدمج العناصر المتشابهة ذات نفس التفضيلات
-  const optionsKey = JSON.stringify(options);
-  
-  let existingItem = cart.find(item => item.name === itemName && item.optionsKey === optionsKey);
+    body {
+      background-color: var(--bg-primary);
+      color: var(--text-main);
+      font-family: system-ui, -apple-system, sans-serif;
+      margin: 0;
+      padding: 15px;
+    }
 
-  if (existingItem) {
-    existingItem.qty += 1; // زيادة الكمية إذا كان الصنف موجوداً سابقاً
-  } else {
-    cart.push({
-      name: itemName,
-      price: price,
-      qty: 1,
-      options: options,
-      optionsKey: optionsKey
-    });
-  }
-  renderCart();
-}
+    .top-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: var(--bg-card);
+      padding: 12px 20px;
+      border-radius: 12px;
+      border: 1px solid var(--border-color);
+      margin-bottom: 15px;
+    }
 
-// تعديل الكمية يدوياً من خانة الإدخال
-function updateQuantity(index, newQty) {
-  let parsedQty = parseInt(newQty);
-  if (isNaN(parsedQty) || parsedQty <= 0) {
-    parsedQty = 1; // الحد الأدنى للكمية
-  }
-  cart[index].qty = parsedQty;
-  renderCart();
-}
+    .btn {
+      background: var(--bg-accent);
+      color: white;
+      border: none;
+      padding: 8px 16px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: bold;
+    }
 
-// حذف عنصر من السلة
-function removeFromCart(index) {
-  cart.splice(index, 1);
-  renderCart();
-}
+    .main-grid {
+      display: grid;
+      grid-template-columns: 1fr 2fr;
+      gap: 15px;
+    }
 
-// عرض عناصر الفاتورة مدمجة على الشاشة
-function renderCart() {
-  const cartContainer = document.getElementById('cartItemsContainer'); // تأكد من مطابقة الـ ID لديك
-  if (!cartContainer) return;
+    .panel {
+      background: var(--bg-card);
+      padding: 15px;
+      border-radius: 12px;
+      border: 1px solid var(--border-color);
+    }
 
-  cartContainer.innerHTML = '';
-  let totalAmount = 0;
+    .meals-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+      gap: 10px;
+      margin-top: 10px;
+    }
 
-  cart.forEach((item, index) => {
-    let itemTotal = item.price * item.qty;
-    totalAmount += itemTotal;
+    .meal-card {
+      background: #2a2a2a;
+      border: 1px solid var(--border-color);
+      padding: 15px;
+      border-radius: 8px;
+      text-align: center;
+      cursor: pointer;
+      font-weight: bold;
+      color: var(--text-main);
+    }
 
-    cartContainer.innerHTML += `
-      <div class="cart-item" style="background: #2a2a2a; border: 1px solid #3f3f46; border-radius: 8px; padding: 10px; margin-bottom: 8px; color: white;">
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
-          <div>
-            <strong>${item.name}</strong> 
-            <span style="color: #f97316; font-weight: bold; margin-right: 6px;">(${item.qty}x)</span>
-          </div>
-          <button onclick="removeFromCart(${index})" style="background: transparent; color: #ef4444; border: none; cursor: pointer; font-weight: bold;">✕</button>
+    .cart-item {
+      background: #2a2a2a;
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      padding: 10px;
+      margin-bottom: 8px;
+      color: white;
+    }
+
+    .qty-input {
+      width: 55px;
+      text-align: center;
+      background: #18181b;
+      color: #ffffff;
+      border: 1px solid var(--border-color);
+      border-radius: 6px;
+      padding: 3px;
+      font-weight: bold;
+    }
+
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      top: 0; left: 0; width: 100%; height: 100%;
+      background: rgba(0, 0, 0, 0.7);
+      backdrop-filter: blur(4px);
+      justify-content: center;
+      align-items: center;
+      z-index: 1000;
+    }
+
+    .modal-content {
+      background: var(--bg-card);
+      padding: 25px;
+      border-radius: 16px;
+      width: 90%;
+      max-width: 380px;
+      text-align: center;
+      border: 1px solid var(--border-color);
+      color: white;
+    }
+
+    .whatsapp-btn {
+      background: #25d366;
+      color: white;
+      text-decoration: none;
+      display: inline-block;
+      padding: 10px 20px;
+      border-radius: 8px;
+      font-weight: bold;
+      margin-top: 10px;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="top-bar">
+    <h2>🌸 نظام كاشير الريس المتطور</h2>
+    <button class="btn" onclick="openModal()">الاشتراكات</button>
+  </div>
+
+  <div class="main-grid">
+    <div class="panel">
+      <h3>الفاتورة</h3>
+      <div id="cartItemsContainer"></div>
+      <hr style="border-color: var(--border-color);">
+      <h4>المجموع النهائى: <span id="finalTotal">0.000</span> د.أ</h4>
+    </div>
+
+    <div class="panel">
+      <h3>الوجبات</h3>
+      <div class="meals-grid">
+        <div class="meal-card" onclick="addToCart('وجبة الريس', 2.500)">
+          وجبة الريس<br><small style="color: var(--bg-accent);">2.500 د.أ</small>
         </div>
-
-        <div style="display: flex; justify-content: space-between; align-items: center; gap: 8px;">
-          <div style="display: flex; align-items: center; gap: 6px;">
-            <label style="font-size: 12px; color: #a1a1aa;">الكمية:</label>
-            <input type="number" 
-                   value="${item.qty}" 
-                   min="1" 
-                   onchange="updateQuantity(${index}, this.value)" 
-                   style="width: 55px; text-align: center; background: #18181b; color: #ffffff; border: 1px solid #3f3f46; border-radius: 6px; padding: 3px; font-weight: bold;" />
-          </div>
-          <div style="font-weight: bold; color: #f97316;">${itemTotal.toFixed(3)} د.أ</div>
+        <div class="meal-card" onclick="addToCart('وجبة صاج دجاج', 3.000)">
+          وجبة صاج دجاج<br><small style="color: var(--bg-accent);">3.000 د.أ</small>
         </div>
       </div>
-    `;
-  });
+    </div>
+  </div>
 
-  // تحديث المجموع النهائي
-  const totalElement = document.getElementById('finalTotal');
-  if (totalElement) totalElement.innerText = `${totalAmount.toFixed(3)} د.أ`;
-}
+  <div id="subModal" class="modal-overlay">
+    <div class="modal-content">
+      <h3 style="color: var(--bg-accent); margin: 0 0 10px 0;">باقات الاشتراكات</h3>
+      <p style="margin: 5px 0;">اسم الموقع: <strong>naks8-tech</strong></p>
+      <p style="margin: 5px 0;">رقم التواصل: <span dir="ltr">+9627XXXXXXXX</span></p>
+      <a id="waLink" href="#" target="_blank" class="whatsapp-btn">تواصل مباشر عبر الواتساب 💬</a>
+      <br><br>
+      <button class="btn" style="background: #3f3f46;" onclick="closeModal()">إغلاق</button>
+    </div>
+  </div>
+
+  <script>
+    function openModal() {
+      const phone = "9627XXXXXXXX";
+      const msg = encodeURIComponent("مرحباً، أرغب بالاستفسار عن اشتراكات موقع naks8-tech");
+      document.getElementById('waLink').href = `https://wa.me/${phone}?text=${msg}`;
+      document.getElementById('subModal').style.display = 'flex';
+    }
+
+    function closeModal() {
+      document.getElementById('subModal').style.display = 'none';
+    }
+
+    let cart = [];
+
+    function addToCart(itemName, price, options = {}) {
+      const optionsKey = JSON.stringify(options);
+      let existingItem = cart.find(item => item.name === itemName && item.optionsKey === optionsKey);
+
+      if (existingItem) {
+        existingItem.qty += 1;
+      } else {
+        cart.push({
+          name: itemName,
+          price: price,
+          qty: 1,
+          options: options,
+          optionsKey: optionsKey
+        });
+      }
+      renderCart();
+    }
+
+    function updateQuantity(index, newQty) {
+      let parsedQty = parseInt(newQty);
+      cart[index].qty = (isNaN(parsedQty) || parsedQty < 1) ? 1 : parsedQty;
+      renderCart();
+    }
+
+    function removeFromCart(index) {
+      cart.splice(index, 1);
+      renderCart();
+    }
+
+    function renderCart() {
+      const container = document.getElementById('cartItemsContainer');
+      if (!container) return;
+
+      container.innerHTML = '';
+      let totalAmount = 0;
+
+      cart.forEach((item, index) => {
+        let itemTotal = item.price * item.qty;
+        totalAmount += itemTotal;
+
+        container.innerHTML += `
+          <div class="cart-item">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+              <div>
+                <strong>${item.name}</strong> 
+                <span style="color: #f97316; font-weight: bold; margin-right: 6px;">(${item.qty}x)</span>
+              </div>
+              <button onclick="removeFromCart(${index})" style="background: transparent; color: #ef4444; border: none; cursor: pointer; font-weight: bold;">✕</button>
+            </div>
+            <div style="display: flex; justify-content: space-between; align-items: center; gap: 8px;">
+              <div style="display: flex; align-items: center; gap: 6px;">
+                <label style="font-size: 12px; color: #a1a1aa;">الكمية:</label>
+                <input type="number" 
+                       class="qty-input"
+                       value="${item.qty}" 
+                       min="1" 
+                       onchange="updateQuantity(${index}, this.value)" />
+              </div>
+              <div style="font-weight: bold; color: #f97316;">${itemTotal.toFixed(3)} د.أ</div>
+            </div>
+          </div>
+        `;
+      });
+
+      const totalElement = document.getElementById('finalTotal');
+      if (totalElement) totalElement.innerText = totalAmount.toFixed(3);
+    }
+  </script>
+</body>
+</html>
