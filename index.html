@@ -614,12 +614,24 @@
         let currentCart = tableCarts[activeTable] || [];
         if (currentCart.length === 0) return alert("الطلب فارغ!");
         
+        let grouped = {};
+        currentCart.forEach(i => {
+            let key = i.name + "___" + (i.note || "");
+            if (!grouped[key]) {
+                grouped[key] = { name: i.name, note: i.note, count: 0 };
+            }
+            grouped[key].count++;
+        });
+
         let lines = [
             "--- أمر إعداد للمطبخ ---",
             `الموقع: ${activeTable}`,
             "---------------------"
         ];
-        currentCart.forEach((i, idx) => lines.push(`${idx + 1}. ${i.name} (${i.note || 'عادي'})`));
+        
+        Object.values(grouped).forEach(i => {
+            lines.push(`${i.count}x  ${i.name} (${i.note || 'عادي'})`);
+        });
 
         if (printCharacteristic) {
             await printReceiptAsImage(lines);
@@ -649,27 +661,47 @@
         document.getElementById('stat-total-profit').innerText = `${totalProfit.toFixed(3)} د.أ`;
         document.getElementById('stat-invoice-count').innerText = invoiceCount;
 
-        // تنسيق وترقيم الفاتورة المحدث والمنظم
+        // تجميع العناصر المكررة لطباعة الكمية (1x, 2x, إلخ) بدلاً من التكرار
+        let groupedItems = {};
+        currentCart.forEach(item => {
+            let key = item.name + "___" + (item.note || "");
+            if (!groupedItems[key]) {
+                groupedItems[key] = {
+                    name: item.name,
+                    unitPrice: item.price,
+                    totalPrice: item.price,
+                    note: item.note,
+                    count: 1
+                };
+            } else {
+                groupedItems[key].count += 1;
+                groupedItems[key].totalPrice += item.price;
+            }
+        });
+
+        // تنسيق الهيدر والجدول في مربع
         let lines = [
-            "★ ★ ★ مطعم الريس ★ ★ ★",
-            "================================",
-            `نوع الطلب: ${activeTable}`,
+            "*** مطعم الريس ***",
+            `الطاولة: ${activeTable}`,
             `طريقة الدفع: ${method}`,
-            "================================"
+            "================================",
+            "الكمية |      الصنف      | السعر",
+            "--------------------------------"
         ];
 
-        // ترقيم الأصناف (1.، 2.، 3. ...) وطباعة التفاصيل
-        currentCart.forEach((i, index) => {
-            lines.push(`${index + 1}. ${i.name} : ${i.price.toFixed(3)} د.أ`);
-            if (i.note && i.note.trim() !== "") {
-                lines.push(`    ↳ إضافات: ${i.note.trim()}`);
+        // إدراج الأصناف المجمعة بالأرقام والكمية
+        Object.values(groupedItems).forEach(item => {
+            let qtyStr = `${item.count}x`;
+            lines.push(`${qtyStr.padEnd(6)} | ${item.name} | ${item.totalPrice.toFixed(3)} د.أ`);
+            if (item.note && item.note.trim() !== "") {
+                lines.push(`       ↳ إضافات: ${item.note.trim()}`);
             }
         });
 
         lines.push("--------------------------------");
         lines.push(`المجموع النهائي: ${finalTotal.toFixed(3)} د.أ`);
         lines.push("================================");
-        lines.push("أهلاً وسهلاً بكم - شكراً لزيارتكم!");
+        lines.push("شكراً لزيارتكم!");
 
         if (printCharacteristic) {
             await printReceiptAsImage(lines);
