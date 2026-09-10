@@ -56,12 +56,10 @@
         
         .code-input, input, select { width: 100%; padding: 12px; margin: 8px 0; background: var(--card-bg); border: 1px solid var(--border-color); color: #fff; border-radius: 8px; font-size: 14px; }
 
-        /* POS Complete View */
         #pos-view { display: none; padding: 15px; max-width: 1400px; margin: 0 auto; }
         .pos-header { display: flex; justify-content: space-between; align-items: center; background: var(--panel-bg); padding: 12px 20px; border-radius: 10px; border: 1px solid var(--border-color); margin-bottom: 15px; }
         .pos-main-grid { display: grid; grid-template-columns: 2.2fr 1fr; gap: 15px; }
         
-        /* Category & Table Tabs */
         .category-tabs, .table-tabs { display: flex; gap: 8px; overflow-x: auto; margin-bottom: 12px; padding-bottom: 5px; }
         .tab-btn { background: var(--card-bg); border: 1px solid var(--border-color); color: #fff; padding: 10px 18px; border-radius: 8px; cursor: pointer; white-space: nowrap; font-size: 13px; font-weight: bold; }
         .tab-btn.active { background: var(--primary-orange); color: #000; border-color: var(--primary-orange); }
@@ -190,7 +188,6 @@
     <div class="pos-main-grid">
         <!-- Menu Section & Controls -->
         <div>
-            <!-- Add Section, Item & Stock Management -->
             <div class="management-box">
                 <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
                     <div>
@@ -213,10 +210,7 @@
                 </div>
             </div>
 
-            <!-- Categories Tabs -->
             <div class="category-tabs" id="category-tabs-container"></div>
-
-            <!-- Items Display Grid -->
             <div class="menu-grid" id="menu-grid-container"></div>
         </div>
 
@@ -260,6 +254,9 @@
     </div>
 </div>
 
+<!-- Canvas مخفي لرسم الفاتورة كصورة للطباعة -->
+<canvas id="receipt-canvas" style="display:none;"></canvas>
+
 <footer>جميع الحقوق محفوظة © نظام كاشير الريس المتكامل</footer>
 
 <script>
@@ -287,37 +284,6 @@
 
     let printCharacteristic = null;
 
-    // دالة تحويل الحروف العربية لترميز Windows-1256 مباشرة بدون مكتبات خارجية
-    function encodeArabicWin1256(str) {
-        const win1256Map = {
-            'ء': 0xC1, 'آ': 0xC2, 'أ': 0xC3, 'ؤ': 0xC4, 'إ': 0xC5, 'ئ': 0xC6, 'ا': 0xC7,
-            'ب': 0xC8, 'ة': 0xC9, 'ت': 0xCA, 'ث': 0xCB, 'ج': 0xCC, 'ح': 0xCD, 'خ': 0xCE,
-            'د': 0xCF, 'ذ': 0xD0, 'ر': 0xD1, 'ز': 0xD2, 'س': 0xD3, 'ش': 0xD4, 'ص': 0xD5,
-            'ض': 0xD6, 'ط': 0xD7, 'ظ': 0xD8, 'ع': 0xD9, 'غ': 0xDA, 'ف': 0xE1, 'ق': 0xE2,
-            'ك': 0xE3, 'ل': 0xE4, 'م': 0xE5, 'ن': 0xE6, 'ه': 0xE7, 'و': 0xE8, 'ى': 0xE9,
-            'ي': 0xEA, 'ً': 0xF0, 'ٌ': 0xF1, 'ٍ': 0xF2, 'َ': 0xF3, 'ُ': 0xF4, 'ِ': 0xF5,
-            'ّ': 0xF6, 'ْ': 0xF8, ' ': 0x20, '\n': 0x0A, '\r': 0x0D, ':': 0x3A, '-': 0x2D,
-            '*': 0x2A, '/': 0x2F, '.': 0x2E, '(': 0x28, ')': 0x29
-        };
-
-        let result = [];
-        for (let i = 0; i < str.length; i++) {
-            let char = str[i];
-            let code = char.charCodeAt(0);
-            
-            if (win1256Map[char] !== undefined) {
-                result.push(win1256Map[char]);
-            } else if (code >= 48 && code <= 57) { // أرقام إنجليزية 0-9
-                result.push(code);
-            } else if ((code >= 65 && code <= 90) || (code >= 97 && code <= 122)) { // حروف إنجليزية
-                result.push(code);
-            } else {
-                result.push(0x3F); // علامة استفهام لأي رمز غير معروف
-            }
-        }
-        return new Uint8Array(result);
-    }
-
     async function connectBluetoothPrinter() {
         if (!navigator.bluetooth) {
             alert("المتصفح لا يدعم البلوتوث المباشر! يرجى استخدام متصفح Chrome.");
@@ -342,7 +308,7 @@
                 document.getElementById('bt-status-btn').style.background = "#10b981";
                 alert("تم ربط الطابعة بنجاح!");
             } else {
-                alert("لم يتم العثور على خدمة طباعة متوافقة مع جهازك!");
+                alert("لم يتم العثور على خدمة طباعة متوافقة!");
             }
         } catch (error) {
             console.error(error);
@@ -350,35 +316,70 @@
         }
     }
 
-    async function sendTextToPrinter(text) {
+    // دالة إنشاء الفاتورة كـ صورة (Canvas) وإرسالها للطابعة بكود ESC/POS Bit Image
+    async function printReceiptAsImage(lines) {
         if (!printCharacteristic) {
-            alert("طابعة البلوتوث غير متصلة! اضغط زر 'ربط طابعة البلوتوث' أولاً.");
+            alert("طابعة البلوتوث غير متصلة! اضغط 'ربط طابعة البلوتوث' أولاً.");
             return false;
         }
-        try {
-            // أمر تهيئة الطابعة ESC @ واختيار الترميز العربي CP864/Windows-1256
-            let initCmd = new Uint8Array([0x1B, 0x40, 0x1B, 0x74, 0x16]);
-            
-            // تحويل النص باستخدام خريطة الترميز المحلية
-            let encodedText = encodeArabicWin1256(text + "\n\n\n");
 
-            // دمج الأوامر مع النص
-            let fullBuffer = new Uint8Array(initCmd.length + encodedText.length);
-            fullBuffer.set(initCmd, 0);
-            fullBuffer.set(encodedText, initCmd.length);
+        let canvas = document.getElementById('receipt-canvas');
+        let ctx = canvas.getContext('2d');
+        
+        let width = 384; // العرض القياسي لطابعات الحرارية 58mm
+        let lineHeight = 32;
+        let height = lines.length * lineHeight + 40;
 
-            // تقسيم الإرسال لحزم صغيرة لتجنب السقوط
-            const chunkSize = 20;
-            for (let i = 0; i < fullBuffer.length; i += chunkSize) {
-                let chunk = fullBuffer.slice(i, i + chunkSize);
-                await printCharacteristic.writeValue(chunk);
+        canvas.width = width;
+        canvas.height = height;
+
+        ctx.fillStyle = '#FFFFFF';
+        ctx.fillRect(0, 0, width, height);
+
+        ctx.fillStyle = '#000000';
+        ctx.font = 'bold 22px "Segoe UI", Arial, sans-serif';
+        ctx.textAlign = 'center';
+        ctx.direction = 'rtl';
+
+        lines.forEach((line, index) => {
+            ctx.fillText(line, width / 2, (index + 1) * lineHeight);
+        });
+
+        let imgData = ctx.getImageData(0, 0, width, height);
+        let bytes = [];
+
+        // أوامر التهيئة
+        bytes.push(0x1B, 0x40);
+
+        // تحويل الصورة لبيانات ثنائية ESC/POS
+        for (let y = 0; y < height; y += 24) {
+            bytes.push(0x1B, 0x2A, 33, width & 0xFF, (width >> 8) & 0xFF);
+            for (let x = 0; x < width; x++) {
+                for (let k = 0; k < 3; k++) {
+                    let slice = 0;
+                    for (let b = 0; b < 8; b++) {
+                        let py = y + k * 8 + b;
+                        if (py < height) {
+                            let offset = (py * width + x) * 4;
+                            let r = imgData.data[offset];
+                            if (r < 128) slice |= (1 << (7 - b));
+                        }
+                    }
+                    bytes.push(slice);
+                }
             }
-
-            return true;
-        } catch (error) {
-            alert("حدث خطأ أثناء إرسال البيانات للطابعة: " + error.message);
-            return false;
+            bytes.push(0x0A);
         }
+        bytes.push(0x0A, 0x0A, 0x0A);
+
+        let uint8Array = new Uint8Array(bytes);
+        const chunkSize = 20;
+        for (let i = 0; i < uint8Array.length; i += chunkSize) {
+            let chunk = uint8Array.slice(i, i + chunkSize);
+            await printCharacteristic.writeValue(chunk);
+        }
+
+        return true;
     }
 
     function applySubscriptionDays(days) {
@@ -621,13 +622,17 @@
         let currentCart = tableCarts[activeTable] || [];
         if (currentCart.length === 0) return alert("الطلب فارغ!");
         
-        let details = currentCart.map(i => `- ${i.name} (${i.note || 'عادي'})`).join('\n');
-        let printText = `--- أمر إعداد للمطبخ ---\nالموقع: ${activeTable}\nالطلبات:\n${details}\n---------------------`;
-        
+        let lines = [
+            "--- أمر إعداد للمطبخ ---",
+            `الموقع: ${activeTable}`,
+            "---------------------"
+        ];
+        currentCart.forEach(i => lines.push(`- ${i.name} (${i.note || 'عادي'})`));
+
         if (printCharacteristic) {
-            await sendTextToPrinter(printText);
+            await printReceiptAsImage(lines);
         } else {
-            alert(`👨‍🍳 أمر إعداد للمطبخ (${activeTable}):\n\n${details}`);
+            alert(`👨‍🍳 أمر إعداد للمطبخ (${activeTable}):\n\n` + lines.join('\n'));
         }
     }
 
@@ -653,20 +658,25 @@
         document.getElementById('stat-total-profit').innerText = `${totalProfit.toFixed(3)} د.أ`;
         document.getElementById('stat-invoice-count').innerText = invoiceCount;
 
-        let receiptText = `*** مطعم الريس ***\n` +
-            `الطاولة: ${activeTable}\n` +
-            `الشفت: ${shift}\n` +
-            `طريقة الدفع: ${method}\n` +
-            `------------------\n` +
-            currentCart.map(i => `${i.name} - ${i.price.toFixed(3)} د.أ`).join('\n') +
-            `\n------------------\n` +
-            `المجموع النهائي: ${finalTotal.toFixed(3)} د.أ\n` +
-            `شكراً لزيارتكم!`;
+        let lines = [
+            "*** مطعم الريس ***",
+            `الطاولة: ${activeTable}`,
+            `الشفت: ${shift} | طريقة الدفع: ${method}`,
+            "--------------------------------"
+        ];
+
+        currentCart.forEach(i => {
+            lines.push(`${i.name} : ${i.price.toFixed(3)} د.أ`);
+        });
+
+        lines.push("--------------------------------");
+        lines.push(`المجموع النهائي: ${finalTotal.toFixed(3)} د.أ`);
+        lines.push("شكراً لزيارتكم!");
 
         if (printCharacteristic) {
-            await sendTextToPrinter(receiptText);
+            await printReceiptAsImage(lines);
         } else {
-            alert(`تم طباعة الفاتورة بنجاح!\nالموقع/الطاولة: ${activeTable}\nالشفت: ${shift}\nطريقة الدفع: ${method}\nالمبلغ: ${finalTotal.toFixed(3)} د.أ`);
+            alert(`تم طباعة الفاتورة بنجاح!\n` + lines.join('\n'));
         }
 
         clearCart();
@@ -687,3 +697,4 @@
 
 </body>
 </html>
+
