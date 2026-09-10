@@ -153,7 +153,7 @@
     </div>
 </div>
 
-<!-- Complete POS View -->
+<!-- POS View -->
 <div id="pos-view">
     <div class="pos-header">
         <div>
@@ -171,7 +171,6 @@
         </div>
     </div>
 
-    <!-- Stats Summary Section -->
     <div class="stats-summary">
         <div class="stat-box">إجمالي المبيعات<strong id="stat-total-sales">0.000 د.أ</strong></div>
         <div class="stat-box">صافي الأرباح<strong id="stat-total-profit" style="color:var(--green-accent);">0.000 د.أ</strong></div>
@@ -179,14 +178,12 @@
         <div class="stat-box">الطلبات المعلقة<strong id="stat-pending-count">0</strong></div>
     </div>
 
-    <!-- Table Selection -->
     <div style="margin-bottom:10px;">
         <span style="font-size:12px; color:#aaa; display:block; margin-bottom:4px;">إدارة الطاولات والتسليم:</span>
         <div class="table-tabs" id="table-tabs-container"></div>
     </div>
 
     <div class="pos-main-grid">
-        <!-- Menu Section & Controls -->
         <div>
             <div class="management-box">
                 <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
@@ -214,7 +211,6 @@
             <div class="menu-grid" id="menu-grid-container"></div>
         </div>
 
-        <!-- Cart Panel Section -->
         <div class="cart-panel">
             <h4 style="margin:0 0 10px 0;">الفاتورة: <span id="current-table-title" style="color:var(--primary-orange);">سفري / مباشر</span></h4>
             
@@ -254,7 +250,6 @@
     </div>
 </div>
 
-<!-- Canvas مخفي لرسم الفاتورة كصورة للطباعة -->
 <canvas id="receipt-canvas" style="display:none;"></canvas>
 
 <footer>جميع الحقوق محفوظة © نظام كاشير الريس المتكامل</footer>
@@ -266,7 +261,7 @@
     let activeCategory = "وجبات";
     
     let menuItems = [
-        { id: 1, name: "وجبة صاج دجاج", price: 2.500, cost: 1.200, category: "وجبات" },
+        { id: 1, name: "وجبة الريس", price: 2.500, cost: 1.200, category: "وجبات" },
         { id: 2, name: "وجبة صاج لحم", price: 3.000, cost: 1.500, category: "وجبات" },
         { id: 3, name: "زنجر سوبريم", price: 2.200, cost: 1.000, category: "سناكات" },
         { id: 4, name: "بطاطا مقلية", price: 1.000, cost: 0.300, category: "سناكات" },
@@ -316,7 +311,6 @@
         }
     }
 
-    // دالة إنشاء الفاتورة كـ صورة (Canvas) وإرسالها للطابعة بكود ESC/POS Bit Image
     async function printReceiptAsImage(lines) {
         if (!printCharacteristic) {
             alert("طابعة البلوتوث غير متصلة! اضغط 'ربط طابعة البلوتوث' أولاً.");
@@ -326,7 +320,7 @@
         let canvas = document.getElementById('receipt-canvas');
         let ctx = canvas.getContext('2d');
         
-        let width = 384; // العرض القياسي لطابعات الحرارية 58mm
+        let width = 384; 
         let lineHeight = 32;
         let height = lines.length * lineHeight + 40;
 
@@ -348,10 +342,8 @@
         let imgData = ctx.getImageData(0, 0, width, height);
         let bytes = [];
 
-        // أوامر التهيئة
         bytes.push(0x1B, 0x40);
 
-        // تحويل الصورة لبيانات ثنائية ESC/POS
         for (let y = 0; y < height; y += 24) {
             bytes.push(0x1B, 0x2A, 33, width & 0xFF, (width >> 8) & 0xFF);
             for (let x = 0; x < width; x++) {
@@ -602,7 +594,7 @@
                     <button class="modifier-btn" onclick="addQuickModifier(${item.id}, 'شطة إضافية', 0)">شطة</button>
                     <button class="modifier-btn" onclick="addQuickModifier(${item.id}, 'جبنة إضافية', 0.300)">+ جبنة (0.30)</button>
                 </div>
-                <input type="text" placeholder="ملاحظة..." value="${item.note}" onchange="updateNote(${item.id}, this.value)" style="margin-top:5px; padding:3px 6px; font-size:11px;">
+                <input type="text" placeholder="ملاحظة / إضافة..." value="${item.note}" onkeyup="updateNote(${item.id}, this.value)" onchange="updateNote(${item.id}, this.value)" style="margin-top:5px; padding:3px 6px; font-size:11px;">
             `;
             container.appendChild(div);
         });
@@ -647,7 +639,6 @@
         let currentCost = currentCart.reduce((sum, item) => sum + item.cost, 0);
         let profit = finalTotal - currentCost;
 
-        let shift = document.getElementById('shift-select').value;
         let method = document.getElementById('pay-method').value;
 
         totalSales += finalTotal;
@@ -658,15 +649,20 @@
         document.getElementById('stat-total-profit').innerText = `${totalProfit.toFixed(3)} د.أ`;
         document.getElementById('stat-invoice-count').innerText = invoiceCount;
 
+        // تعديل الهيدر: تم إزالة الشفت وإبقاء طريقة الدفع والطاولة فقط
         let lines = [
             "*** مطعم الريس ***",
             `الطاولة: ${activeTable}`,
-            `الشفت: ${shift} | طريقة الدفع: ${method}`,
+            `طريقة الدفع: ${method}`,
             "--------------------------------"
         ];
 
+        // طباعة الأصناف مع الملاحظات/الإضافات إن وجدت
         currentCart.forEach(i => {
             lines.push(`${i.name} : ${i.price.toFixed(3)} د.أ`);
+            if (i.note && i.note.trim() !== "") {
+                lines.push(`   * إضافات: ${i.note.trim()}`);
+            }
         });
 
         lines.push("--------------------------------");
@@ -697,4 +693,3 @@
 
 </body>
 </html>
-
